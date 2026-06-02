@@ -18,7 +18,10 @@
 
 ## 📸 Aperçu
 
-<img width="1670" height="946" alt="Capture d&#39;écran 2026-05-24 151851" src="https://github.com/user-attachments/assets/4ce96a83-d3b9-49eb-b98f-b403d16594bb" />
+<img width="1294" height="722" alt="Capture d&#39;écran 2026-05-24 172933" src="https://github.com/user-attachments/assets/06c67eab-7cd2-4eff-a513-92fe44788911" />
+<img width="1284" height="905" alt="Capture d&#39;écran 2026-05-24 173016" src="https://github.com/user-attachments/assets/f190a890-6efd-4bbf-bae9-c06e7b06bf26" />
+<img width="1042" height="674" alt="Capture d&#39;écran 2026-05-24 173103" src="https://github.com/user-attachments/assets/8f54c265-90f4-472e-833c-f6a3f560e7b2" />
+
 
 ---
 
