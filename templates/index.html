@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Price Scout</title>
+<style>
+:root {
+  --bg: #0d0d14;
+  --bg2: #13131f;
+  --card: #1c1c2e;
+  --card2: #22223a;
+  --border: #2e2e4a;
+  --accent: #6c47ff;
+  --accent-glow: rgba(108,71,255,.3);
+  --accent2: #8f6fff;
+  --text: #eeeef8;
+  --muted: #6b6b90;
+  --muted2: #9090b0;
+  --green: #3ddc84;
+  --red: #ff5a5a;
+  --yellow: #ffc857;
+  --vinted: #00c2c9;
+  --ebay: #e53238;
+  --lbc: #ff6b35;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+/* HEADER */
+header { text-align: center; padding: 2.5rem 1rem 1.5rem; border-bottom: 1px solid var(--border); }
+.logo { display: inline-flex; align-items: center; gap: .6rem; font-size: 1.9rem; font-weight: 900; letter-spacing: -1px; margin-bottom: .5rem; }
+.logo .icon-wrap { background: var(--accent); border-radius: 12px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 0 20px var(--accent-glow); }
+.logo .colored { color: var(--accent2); }
+header .sub { color: var(--muted2); font-size: .85rem; display: flex; justify-content: center; gap: 1.2rem; flex-wrap: wrap; }
+header .sub span { display: flex; align-items: center; gap: .35rem; }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+/* NAV TABS (Comparateur / Chasse) */
+.nav-tabs { display: flex; justify-content: center; gap: .5rem; margin: 1.5rem auto .5rem; max-width: 480px; padding: 0 1rem; }
+.nav-tab { flex: 1; padding: .65rem 1rem; border-radius: 12px; border: 1.5px solid var(--border); background: transparent; color: var(--muted2); font-size: .95rem; font-weight: 700; cursor: pointer; transition: all .2s; text-align: center; }
+.nav-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 4px 15px var(--accent-glow); }
+.nav-tab:not(.active):hover { border-color: var(--accent2); color: var(--accent2); }
+.nav-tab.hunt-tab.active { background: linear-gradient(135deg,#ff6b35,#ff3d7f); border-color: #ff6b35; box-shadow: 0 4px 15px rgba(255,107,53,.35); }
+
+/* MODE TABS */
+.mode-tabs { display: flex; justify-content: center; gap: .5rem; margin: .8rem auto .5rem; max-width: 400px; padding: 0 1rem; }
+.mode-tab { flex: 1; padding: .65rem 1rem; border-radius: 12px; border: 1.5px solid var(--border); background: transparent; color: var(--muted2); font-size: .9rem; font-weight: 700; cursor: pointer; transition: all .2s; text-align: center; }
+.mode-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 4px 15px var(--accent-glow); }
+.mode-tab:not(.active):hover { border-color: var(--accent2); color: var(--accent2); }
+
+/* HUNT SECTION */
+.hunt-section { max-width: 720px; margin: 0 auto; padding: 0 1rem; }
+.hunt-row { display: flex; gap: .6rem; margin-bottom: .7rem; }
+.hunt-row input { flex: 1; background: var(--card); border: 1.5px solid var(--border); border-radius: 12px; padding: .7rem 1rem; color: var(--text); font-size: 1rem; outline: none; transition: border-color .2s; }
+.hunt-row input:focus { border-color: #ff6b35; }
+.hunt-row input::placeholder { color: var(--muted); }
+.hunt-btn { background: linear-gradient(135deg,#ff6b35,#ff3d7f); border: none; border-radius: 12px; padding: .7rem 1.6rem; color: #fff; font-size: .95rem; font-weight: 700; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 15px rgba(255,107,53,.3); transition: opacity .2s; }
+.hunt-btn:hover { opacity: .85; }
+.hunt-btn:disabled { opacity: .4; cursor: not-allowed; }
+.kw-chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .8rem; }
+.kw-chip { background: var(--card2); border: 1.5px solid var(--border); border-radius: 20px; padding: .25rem .75rem; font-size: .8rem; color: var(--muted2); cursor: pointer; transition: all .15s; user-select: none; }
+.kw-chip:hover { border-color: #ff6b35; color: #ff6b35; }
+.kw-chip.active { background: rgba(255,107,53,.15); border-color: #ff6b35; color: #ff6b35; }
+.kw-hint { font-size: .75rem; color: var(--muted); margin-bottom: .4rem; }
+
+/* ONGLET ALERTES */
+.alerts-section { max-width: 720px; margin: 0 auto; padding: 0 1rem 3rem; }
+.alert-create-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; padding: 1.2rem 1.4rem; margin-bottom: 1.2rem; }
+.alert-create-card h3 { font-size: .85rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .9rem; }
+.alert-form-row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: flex-end; }
+.alert-form-group { display: flex; flex-direction: column; gap: .25rem; }
+.alert-form-group label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.alert-form-group input, .alert-form-group select { background: var(--bg2); border: 1.5px solid var(--border); border-radius: 10px; padding: .5rem .85rem; color: var(--text); font-size: .88rem; outline: none; transition: border-color .2s; }
+.alert-form-group input:focus, .alert-form-group select:focus { border-color: var(--accent); }
+.alert-form-group.grow { flex: 1; min-width: 180px; }
+.alert-create-btn { background: var(--accent); border: none; border-radius: 10px; padding: .55rem 1.2rem; color: #fff; font-size: .88rem; font-weight: 700; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 12px var(--accent-glow); transition: opacity .2s; align-self: flex-end; }
+.alert-create-btn:hover { opacity: .85; }
+.alert-list { display: flex; flex-direction: column; gap: .7rem; }
+.alert-item { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: .9rem 1.1rem; display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; transition: border-color .2s; }
+.alert-item.inactive { opacity: .5; }
+.alert-item:hover { border-color: var(--accent); }
+.alert-info { flex: 1; min-width: 150px; }
+.alert-query { font-weight: 700; font-size: .95rem; color: var(--text); }
+.alert-meta { font-size: .75rem; color: var(--muted); margin-top: .2rem; display: flex; gap: .8rem; flex-wrap: wrap; }
+.alert-hits { background: rgba(61,220,132,.12); color: var(--green); border-radius: 8px; padding: .15rem .55rem; font-size: .75rem; font-weight: 800; }
+.alert-actions { display: flex; gap: .4rem; }
+.alert-action-btn { background: var(--card2); border: 1.5px solid var(--border); border-radius: 8px; padding: .3rem .7rem; font-size: .78rem; font-weight: 700; cursor: pointer; color: var(--muted2); transition: all .15s; white-space: nowrap; }
+.alert-action-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.alert-action-btn.del:hover { border-color: var(--red); color: var(--red); }
+.alert-empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+
+/* ALERTE COMPARATEUR */
+.alert-bar { max-width: 720px; margin: .5rem auto 0; padding: 0 1rem; display: none; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.alert-bar.visible { display: flex; }
+.alert-bar input { background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: .5rem .8rem; color: var(--text); font-size: .85rem; outline: none; width: 130px; transition: border-color .2s; }
+.alert-bar input:focus { border-color: var(--accent); }
+.alert-btn { background: var(--card2); border: 1.5px solid var(--border); border-radius: 10px; padding: .5rem 1rem; color: var(--muted2); font-size: .85rem; font-weight: 700; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.alert-btn:hover { border-color: var(--accent); color: var(--accent2); }
+.alert-btn.on { background: rgba(61,220,132,.12); border-color: var(--green); color: var(--green); }
+.alert-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.alert-dot.on { background: var(--green); animation: pulse 1.5s infinite; }
+
+/* MARGE BADGE */
+.marge-badge { display: inline-flex; flex-direction: column; align-items: center; padding: .25rem .6rem; border-radius: 10px; font-size: .75rem; font-weight: 800; white-space: nowrap; line-height: 1.3; }
+.marge-hot  { background: rgba(61,220,132,.12); color: var(--green); }
+.marge-warm { background: rgba(255,200,87,.12);  color: var(--yellow); }
+.marge-cold { background: rgba(255,90,90,.12);   color: var(--red); }
+.marge-neu  { background: rgba(144,144,176,.1);  color: var(--muted2); }
+.marge-sub  { font-size: .65rem; opacity: .8; }
+
+/* WATCH BAR */
+.watch-bar { max-width: 720px; margin: .6rem auto 0; padding: 0 1rem; display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.watch-btn { background: linear-gradient(135deg,#ff6b35,#ff3d7f); border: none; border-radius: 12px; padding: .55rem 1.3rem; color: #fff; font-size: .88rem; font-weight: 700; cursor: pointer; transition: opacity .2s; white-space: nowrap; }
+.watch-btn:hover { opacity: .85; }
+.watch-btn.on { background: linear-gradient(135deg,#3ddc84,#00c2c9); }
+.watch-select { background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: .5rem .8rem; color: var(--text); font-size: .85rem; outline: none; cursor: pointer; }
+.watch-status { font-size: .8rem; color: var(--muted2); display: flex; align-items: center; gap: .4rem; }
+.watch-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.watch-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.notif-badge { background: var(--red); color: #fff; border-radius: 50%; width: 20px; height: 20px; font-size: .7rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; margin-left: .3rem; }
+
+/* SCORE BADGE */
+.score-badge { display: inline-flex; align-items: center; gap: .25rem; padding: .2rem .65rem; border-radius: 20px; font-size: .78rem; font-weight: 800; white-space: nowrap; }
+.score-hot  { background: rgba(255,60,60,.15);  color: #ff5a5a; }
+.score-warm { background: rgba(255,107,53,.15); color: #ff6b35; }
+.score-cool { background: rgba(108,71,255,.12); color: var(--accent2); }
+.kw-highlight { background: rgba(255,200,87,.2); color: var(--yellow); border-radius: 4px; padding: 0 .2rem; font-weight: 700; }
+.desc-excerpt { font-size: .78rem; color: var(--muted2); margin-top: .3rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* SEARCH */
+.search-section { max-width: 720px; margin: 1rem auto; padding: 0 1rem; }
+.search-box { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; padding: .35rem .35rem .35rem 1.2rem; display: flex; align-items: center; gap: .5rem; transition: border-color .2s, box-shadow .2s; }
+.search-box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.search-box input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 1.05rem; padding: .5rem 0; }
+.search-box input::placeholder { color: var(--muted); }
+.search-box button { background: var(--accent); border: none; border-radius: 11px; padding: .7rem 1.6rem; color: #fff; font-size: .95rem; font-weight: 700; cursor: pointer; transition: background .2s, transform .1s; white-space: nowrap; box-shadow: 0 4px 15px var(--accent-glow); }
+.search-box button:hover { background: var(--accent2); }
+.search-box button:active { transform: scale(.97); }
+.search-box button:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.mode-hint { text-align: center; color: var(--muted); font-size: .8rem; margin-top: .5rem; }
+
+/* FILTERS ROW */
+.filters-row { max-width: 720px; margin: .8rem auto 0; padding: 0 1rem; display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+.filter-group { display: flex; flex-direction: column; gap: .25rem; flex: 1; min-width: 110px; }
+.filter-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.filter-input { background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: .5rem .8rem; color: var(--text); font-size: .9rem; outline: none; width: 100%; transition: border-color .2s; }
+.filter-input:focus { border-color: var(--accent); }
+select.filter-input { cursor: pointer; }
+
+/* CONTAINER */
+.container { max-width: 1100px; margin: 0 auto; padding: 1rem 1rem 5rem; }
+
+/* STATS */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: .7rem; margin-bottom: 1.2rem; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: .9rem 1.1rem; }
+.stat-card .label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .2rem; }
+.stat-card .value { font-size: 1.4rem; font-weight: 800; }
+.stat-card.total .value { color: var(--text); }
+.stat-card.min   .value { color: var(--green); }
+.stat-card.avg   .value { color: var(--accent2); }
+.stat-card.max   .value { color: var(--red); }
+
+/* SOURCE PILLS */
+.sources-bar { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.src-pill { display: flex; align-items: center; gap: .4rem; padding: .3rem .85rem; border-radius: 20px; font-size: .8rem; font-weight: 700; cursor: pointer; border: 1.5px solid var(--border); background: transparent; color: var(--muted2); transition: all .15s; user-select: none; }
+.src-pill:hover { border-color: var(--muted2); }
+.src-pill.active { color: #fff; }
+.src-pill[data-src="tous"].active     { background: var(--accent); border-color: var(--accent); color: #fff; }
+.src-pill[data-src="Vinted"].active   { background: rgba(0,194,201,.2); border-color: var(--vinted); color: var(--vinted); }
+.src-pill[data-src="eBay"].active     { background: rgba(229,50,56,.2); border-color: var(--ebay); color: var(--ebay); }
+.src-pill[data-src="LeBonCoin"].active{ background: rgba(255,107,53,.2); border-color: var(--lbc); color: var(--lbc); }
+.filters-hint { font-size: .72rem; color: var(--muted); margin-left: .3rem; align-self: center; }
+
+/* TABLE */
+.table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+thead th { background: var(--bg2); color: var(--muted); font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: .85rem 1rem; text-align: left; }
+tbody tr { border-top: 1px solid rgba(255,255,255,.04); transition: background .1s; }
+tbody tr:hover { background: rgba(108,71,255,.06); }
+td { padding: .75rem 1rem; vertical-align: middle; }
+td.rank { color: var(--muted); font-size: .85rem; font-weight: 700; width: 44px; text-align: center; }
+.photo { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: var(--card2); display: block; }
+.no-photo { width: 50px; height: 50px; border-radius: 8px; background: var(--card2); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+.badge { display: inline-block; padding: .2rem .6rem; border-radius: 7px; font-size: .72rem; font-weight: 800; white-space: nowrap; }
+.badge-Vinted     { background: rgba(0,194,201,.15); color: var(--vinted); }
+.badge-eBay       { background: rgba(229,50,56,.15);  color: var(--ebay); }
+.badge-LeBonCoin  { background: rgba(255,107,53,.15); color: var(--lbc); }
+.title-link { color: var(--text); text-decoration: none; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; transition: color .15s; }
+.title-link:hover { color: var(--accent2); }
+td.price { font-weight: 800; font-size: 1rem; white-space: nowrap; color: var(--green); }
+td.price.top1   { color: var(--yellow); }
+td.price.is-max { color: var(--red); }
+
+/* SORT BAR */
+.sort-bar { display: flex; align-items: center; gap: .4rem; margin-bottom: .8rem; flex-wrap: wrap; }
+.sort-bar .sort-label { font-size: .75rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-right: .2rem; white-space: nowrap; }
+.sort-btn { background: transparent; border: 1.5px solid var(--border); border-radius: 20px; padding: .28rem .75rem; font-size: .8rem; font-weight: 600; color: var(--muted2); cursor: pointer; transition: all .15s; white-space: nowrap; display: inline-flex; align-items: center; gap: .3rem; }
+.sort-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.sort-btn.active { background: var(--card2); border-color: var(--accent); color: var(--accent2); }
+.sort-btn .sort-rank { background: var(--accent); color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: .65rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sort-reset { background: transparent; border: none; color: var(--muted); font-size: .75rem; cursor: pointer; padding: .2rem .4rem; border-radius: 6px; transition: color .15s; }
+.sort-reset:hover { color: var(--red); }
+
+/* LOAD MORE */
+.load-more-wrap { text-align: center; padding: 1.2rem; border-top: 1px solid var(--border); }
+.load-more-btn { background: transparent; border: 1.5px solid var(--accent); color: var(--accent2); border-radius: 12px; padding: .6rem 2rem; font-size: .9rem; font-weight: 700; cursor: pointer; transition: all .2s; }
+.load-more-btn:hover { background: var(--accent); color: #fff; }
+
+/* PLACEHOLDER */
+.placeholder { text-align: center; padding: 4rem 1rem; color: var(--muted); }
+.placeholder .big-icon { font-size: 3.5rem; margin-bottom: 1.2rem; }
+.placeholder p { font-size: 1rem; line-height: 1.6; }
+
+/* SPINNER */
+.spinner { display: inline-block; width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,.2); border-top-color: #fff; border-radius: 50%; animation: spin .65s linear infinite; vertical-align: middle; margin-right: .4rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ALERTS */
+.alert { background: rgba(255,90,90,.1); border: 1px solid rgba(255,90,90,.3); border-radius: 12px; padding: .75rem 1rem; margin-bottom: .8rem; color: #ff8080; font-size: .83rem; }
+.warn  { background: rgba(255,200,87,.07); border: 1px solid rgba(255,200,87,.25); border-radius: 12px; padding: .6rem 1rem; margin-bottom: .6rem; color: #ffc857; font-size: .8rem; }
+.trial-banner { padding: .7rem 1.4rem; font-size: .88rem; border-bottom: 1px solid; text-align: center; }
+.trial-active  { background: rgba(108,71,255,.12); border-color: rgba(108,71,255,.3); color: #a78bfa; }
+.trial-expired { background: rgba(255,90,90,.12);  border-color: rgba(255,90,90,.35); color: #ff5a5a; }
+
+/* HISTORIQUE */
+.history-section { max-width: 900px; margin: 0 auto; padding: 1rem 1rem 3rem; }
+.history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: .5rem; }
+.history-header h3 { font-size: .85rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.history-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: .9rem 1.2rem; margin-bottom: .5rem; cursor: pointer; transition: border-color .2s; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.history-card:hover { border-color: var(--accent); }
+.history-icon { font-size: 1.6rem; flex-shrink: 0; }
+.history-info { flex: 1; min-width: 150px; }
+.history-query { font-weight: 700; font-size: .95rem; color: var(--text); }
+.history-meta { font-size: .75rem; color: var(--muted); margin-top: .2rem; display: flex; gap: .8rem; flex-wrap: wrap; }
+.history-prices { display: flex; gap: .8rem; flex-wrap: wrap; margin-left: auto; }
+.history-price-item { display: flex; flex-direction: column; align-items: center; }
+.history-price-lbl { font-size: .6rem; font-weight: 700; text-transform: uppercase; color: var(--muted); }
+.history-price-val { font-size: .9rem; font-weight: 800; }
+.h-btn { background: transparent; border: 1.5px solid var(--border); border-radius: 8px; padding: .3rem .75rem; font-size: .78rem; color: var(--muted2); cursor: pointer; transition: all .15s; white-space: nowrap; }
+.h-btn:hover { border-color: var(--red); color: var(--red); }
+.h-btn.replay:hover { border-color: var(--accent); color: var(--accent2); }
+
+/* WATCHLIST */
+.watchlist-section { max-width: 900px; margin: 0 auto; padding: 1rem 1rem 3rem; }
+.wl-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: .5rem; }
+.wl-header h3 { font-size: .85rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.wl-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: .75rem 1rem; margin-bottom: .45rem; display: flex; align-items: center; gap: .9rem; transition: border-color .2s; }
+.wl-card:hover { border-color: var(--accent2); }
+.wl-photo { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+.wl-no-photo { width: 44px; height: 44px; border-radius: 8px; background: var(--card2); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.wl-info { flex: 1; min-width: 0; }
+.wl-title { font-weight: 600; font-size: .88rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wl-meta { font-size: .72rem; color: var(--muted); margin-top: .15rem; display: flex; gap: .6rem; flex-wrap: wrap; }
+.wl-price { font-weight: 800; font-size: .95rem; color: var(--green); white-space: nowrap; flex-shrink: 0; }
+.wl-del { background: transparent; border: 1.5px solid var(--border); border-radius: 8px; padding: .25rem .6rem; color: var(--muted); font-size: .75rem; cursor: pointer; transition: all .15s; flex-shrink: 0; }
+.wl-del:hover { border-color: var(--red); color: var(--red); }
+.wl-add-btn { background: var(--card2); border: 1.5px solid var(--border); border-radius: 7px; padding: .18rem .5rem; font-size: .7rem; color: var(--muted2); cursor: pointer; transition: all .15s; white-space: nowrap; }
+.wl-add-btn:hover { border-color: var(--green); color: var(--green); }
+.wl-add-btn.added { border-color: var(--green); color: var(--green); background: rgba(61,220,132,.1); cursor: default; }
+
+/* CSV + OUTILS RÉSULTATS */
+.results-toolbar { display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; flex-wrap: wrap; }
+.tool-btn { background: transparent; border: 1.5px solid var(--border); border-radius: 8px; padding: .28rem .75rem; font-size: .78rem; font-weight: 600; color: var(--muted2); cursor: pointer; transition: all .15s; white-space: nowrap; }
+.tool-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.tool-btn.csv:hover { border-color: var(--green); color: var(--green); }
+
+/* FILTRE GRADÉES */
+.graded-filter { max-width: 720px; margin: .3rem auto 0; padding: 0 1rem; display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
+.graded-lbl { font-size: .7rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.graded-chip { background: transparent; border: 1.5px solid var(--border); border-radius: 20px; padding: .22rem .7rem; font-size: .78rem; font-weight: 600; color: var(--muted2); cursor: pointer; transition: all .15s; user-select: none; }
+.graded-chip:hover { border-color: var(--accent2); color: var(--accent2); }
+.graded-chip.active { background: rgba(108,71,255,.15); border-color: var(--accent); color: var(--accent2); }
+
+/* OPPORTUNITÉ */
+tr.is-opp td:first-child { border-left: 3px solid var(--green); }
+tr.is-opp { background: rgba(61,220,132,.03); }
+.opp-tag { display: inline-block; background: rgba(61,220,132,.18); border: 1px solid rgba(61,220,132,.3); color: var(--green); border-radius: 10px; padding: .1rem .45rem; font-size: .68rem; font-weight: 800; margin-left: .3rem; vertical-align: middle; }
+
+/* STATS MARCHÉ */
+.mkt-bar { max-width: 720px; margin: .3rem auto 0; padding: 0 1rem; display: none; }
+.mkt-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 12px; padding: .65rem 1.1rem; display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; }
+.mkt-title { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-right: .5rem; white-space: nowrap; }
+.mkt-item { display: flex; flex-direction: column; gap: .1rem; }
+.mkt-lbl { font-size: .62rem; font-weight: 700; text-transform: uppercase; color: var(--muted); }
+.mkt-val { font-size: .95rem; font-weight: 800; color: var(--text); }
+
+/* MODE BADGE */
+.mode-badge { display: inline-block; padding: .2rem .7rem; border-radius: 20px; font-size: .72rem; font-weight: 800; margin-left: .5rem; }
+.mode-badge.strict { background: rgba(108,71,255,.2); color: var(--accent2); }
+.mode-badge.large  { background: rgba(255,200,87,.15); color: var(--yellow); }
+
+
+/* SETTINGS */
+.settings-section { max-width: 560px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+.settings-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; padding: 1.4rem 1.6rem; margin-bottom: 1.2rem; }
+.settings-card h3 { font-size: .82rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 1.1rem; display: flex; align-items: center; gap: .5rem; }
+.settings-field { margin-bottom: .9rem; }
+.settings-field label { display: block; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: .35rem; }
+.settings-field input { width: 100%; background: var(--bg2); border: 1.5px solid var(--border); border-radius: 10px; padding: .6rem .9rem; color: var(--text); font-size: .92rem; font-family: 'Consolas', monospace; outline: none; transition: border-color .2s; }
+.settings-field input:focus { border-color: var(--accent); }
+.settings-field input::placeholder { color: var(--muted); font-family: 'Segoe UI', sans-serif; }
+.settings-actions { display: flex; gap: .7rem; margin-top: 1.1rem; flex-wrap: wrap; }
+.settings-save-btn { background: var(--accent); border: none; border-radius: 10px; padding: .6rem 1.4rem; color: #fff; font-size: .9rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px var(--accent-glow); transition: opacity .2s; }
+.settings-save-btn:hover { opacity: .85; }
+.settings-test-btn { background: var(--card2); border: 1.5px solid var(--border); border-radius: 10px; padding: .6rem 1.2rem; color: var(--muted2); font-size: .9rem; font-weight: 700; cursor: pointer; transition: all .15s; }
+.settings-test-btn:hover { border-color: var(--green); color: var(--green); }
+.settings-status { margin-top: .8rem; font-size: .85rem; padding: .5rem .9rem; border-radius: 8px; display: none; }
+.settings-status.ok  { display: block; background: rgba(61,220,132,.1);  color: var(--green); border: 1px solid rgba(61,220,132,.3); }
+.settings-status.err { display: block; background: rgba(255,90,90,.1);   color: var(--red);   border: 1px solid rgba(255,90,90,.3); }
+.settings-info { font-size: .82rem; color: var(--muted2); line-height: 1.6; }
+.settings-info b { color: var(--text); }
+.settings-info code { background: var(--card2); border-radius: 4px; padding: .1rem .4rem; font-family: 'Consolas', monospace; font-size: .8rem; color: var(--accent2); }
+.settings-step { display: flex; gap: .7rem; margin-bottom: .6rem; align-items: flex-start; }
+.settings-step-num { background: var(--accent); color: #fff; border-radius: 50%; width: 22px; height: 22px; font-size: .75rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: .1rem; }
+
+@media (max-width: 600px) {
+  .logo { font-size: 1.5rem; }
+  thead th:nth-child(3) { display: none; }
+  td:nth-child(3) { display: none; }
+  .photo, .no-photo { width: 38px; height: 38px; }
+  td { padding: .55rem .6rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="icon-wrap">🔎</div>
+    <span>Price </span><span class="colored">Scout</span>
+  </div>
+  <div class="sub">
+    <span><span class="dot" style="background:var(--vinted)"></span>Vinted</span>
+    <span><span class="dot" style="background:var(--lbc)"></span>LeBonCoin</span>
+    <span style="color:var(--muted);font-size:.75rem">v{{ version }}</span>
+  </div>
+</header>
+
+<!-- NAVIGATION PRINCIPALE -->
+<div class="nav-tabs" style="max-width:980px">
+  <button class="nav-tab active" id="navComparateur" onclick="setNav('comparateur')">🔎 Comparateur</button>
+  <button class="nav-tab hunt-tab" id="navChasse" onclick="setNav('chasse')">🔥 Chasse</button>
+  <button class="nav-tab" id="navAlertes" onclick="setNav('alertes')" style="position:relative">
+    🔔 Alertes<span id="alertsNavBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border-radius:50%;width:18px;height:18px;font-size:.65rem;font-weight:800;display:none;align-items:center;justify-content:center"></span>
+  </button>
+  <button class="nav-tab" id="navHistorique" onclick="setNav('historique')">📚 Historique</button>
+  <button class="nav-tab" id="navWatchlist" onclick="setNav('watchlist')">⭐ Watchlist</button>
+  <button class="nav-tab" id="navParams" onclick="setNav('params')">⚙️ Paramètres</button>
+</div>
+
+<!-- SECTION COMPARATEUR -->
+<div id="sectionComparateur">
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tab-strict" onclick="setMode('strict')">Recherche Precise</button>
+    <button class="mode-tab" id="tab-large" onclick="setMode('large')">Recherche Large</button>
+  </div>
+  <div class="search-section">
+    <div class="search-box">
+      <input type="text" id="queryInput" placeholder="Ex : Mega Dracaufeu X ex MEP 023" autocomplete="off">
+      <button id="searchBtn" onclick="doSearch()">Rechercher</button>
+    </div>
+    <p class="mode-hint" id="modeHint">Precise : tous les mots doivent etre dans le titre</p>
+  </div>
+</div>
+
+<!-- SECTION CHASSE -->
+<div id="sectionChasse" style="display:none">
+  <div class="hunt-section">
+    <div class="hunt-row">
+      <input type="text" id="huntQuery" placeholder="Ce que tu cherches (ex: carte pokemon, pokemon, pikachu...)" autocomplete="off">
+      <button class="hunt-btn" id="huntBtn" onclick="doHunt()">Chasser 🔥</button>
+    </div>
+    <p class="kw-hint">Mots-clés vendeur non-expert — clique pour activer, tape les tiens :</p>
+    <div class="kw-chips" id="kwChips">
+      <span class="kw-chip" onclick="toggleChip(this)">vide chambre</span>
+      <span class="kw-chip" onclick="toggleChip(this)">vide grenier</span>
+      <span class="kw-chip" onclick="toggleChip(this)">demenagement</span>
+      <span class="kw-chip" onclick="toggleChip(this)">fait de la place</span>
+      <span class="kw-chip" onclick="toggleChip(this)">mon fils</span>
+      <span class="kw-chip" onclick="toggleChip(this)">mon enfant</span>
+      <span class="kw-chip" onclick="toggleChip(this)">cadeau</span>
+      <span class="kw-chip" onclick="toggleChip(this)">trouve dans</span>
+      <span class="kw-chip" onclick="toggleChip(this)">sais pas</span>
+      <span class="kw-chip" onclick="toggleChip(this)">a estimer</span>
+      <span class="kw-chip" onclick="toggleChip(this)">faire offre</span>
+      <span class="kw-chip" onclick="toggleChip(this)">lot</span>
+      <span class="kw-chip" onclick="toggleChip(this)">en vrac</span>
+      <span class="kw-chip" onclick="toggleChip(this)">heritage</span>
+      <span class="kw-chip" onclick="toggleChip(this)">ancien</span>
+      <span class="kw-chip" onclick="toggleChip(this)">placard</span>
+      <span class="kw-chip" onclick="toggleChip(this)">grenier</span>
+      <span class="kw-chip" onclick="toggleChip(this)">divorce</span>
+    </div>
+    <div style="display:flex;gap:.5rem;margin-bottom:.5rem">
+      <input type="text" id="huntCustomKw" class="filter-input" placeholder="Ajouter un mot-clé personnalisé..." style="flex:1;border-radius:10px;padding:.45rem .9rem;font-size:.85rem" onkeydown="if(event.key==='Enter')addCustomChip()">
+      <button onclick="addCustomChip()" style="background:var(--card2);border:1.5px solid var(--border);border-radius:10px;padding:.45rem .9rem;color:var(--muted2);cursor:pointer;font-size:.85rem">+ Ajouter</button>
+    </div>
+  </div>
+  <!-- BARRE SURVEILLANCE -->
+  <div class="watch-bar">
+    <button class="watch-btn" id="watchBtn" onclick="toggleWatch()">👁 Surveiller</button>
+    <select class="watch-select" id="watchInterval">
+      <option value="2">toutes les 2 min</option>
+      <option value="5" selected>toutes les 5 min</option>
+      <option value="10">toutes les 10 min</option>
+      <option value="15">toutes les 15 min</option>
+    </select>
+    <div class="watch-status">
+      <span class="watch-dot" id="watchDot"></span>
+      <span id="watchStatusText">Inactif</span>
+    </div>
+  </div>
+</div>
+
+<!-- FILTRES -->
+<div class="filters-row" id="filtersRow">
+  <div class="filter-group">
+    <span class="filter-label">Prix min (€)</span>
+    <input type="number" id="prixMin" class="filter-input" placeholder="0" min="0">
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Prix max (€)</span>
+    <input type="number" id="prixMax" class="filter-input" placeholder="Illimite" min="0">
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Pages Vinted</span>
+    <select id="nbPages" class="filter-input">
+      <option value="3">3 pages (~290)</option>
+      <option value="5" selected>5 pages (~480)</option>
+      <option value="7">7 pages (~670)</option>
+      <option value="10">10 pages (~960)</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Pages LBC</span>
+    <select id="lbcPages" class="filter-input">
+      <option value="1">1 page (~35)</option>
+      <option value="3" selected>3 pages (~105)</option>
+      <option value="5">5 pages (~175)</option>
+    </select>
+  </div>
+</div>
+
+<!-- SECTION HISTORIQUE -->
+<div id="sectionHistorique" style="display:none">
+  <div class="history-section">
+    <div class="history-header">
+      <h3>📚 Historique des recherches</h3>
+      <button class="h-btn" onclick="clearHistory()">🗑 Tout effacer</button>
+    </div>
+    <div id="historyList"><div style="text-align:center;padding:3rem;color:var(--muted)">Chargement...</div></div>
+  </div>
+</div>
+
+<!-- SECTION WATCHLIST -->
+<div id="sectionWatchlist" style="display:none">
+  <div class="watchlist-section">
+    <div class="wl-header">
+      <h3>⭐ Watchlist — Annonces sauvegardées</h3>
+      <span style="font-size:.78rem;color:var(--muted)">Sauvegarde des annonces depuis les résultats</span>
+    </div>
+    <div id="watchlistItems"><div style="text-align:center;padding:3rem;color:var(--muted)">Chargement...</div></div>
+  </div>
+</div>
+
+<!-- FILTRE ÉTAT -->
+<div class="graded-filter" id="etatFilter" style="display:none">
+  <span class="graded-lbl">État :</span>
+  <button class="graded-chip active" data-etat="all"   onclick="setEtatFilter('all')">Tous</button>
+  <button class="graded-chip" data-etat="neuf"         onclick="setEtatFilter('neuf')">Neuf</button>
+  <button class="graded-chip" data-etat="tbe"          onclick="setEtatFilter('tbe')">Très bon état</button>
+  <button class="graded-chip" data-etat="be"           onclick="setEtatFilter('be')">Bon état</button>
+  <button class="graded-chip" data-etat="satisfaisant" onclick="setEtatFilter('satisfaisant')">Satisfaisant</button>
+</div>
+
+<!-- FILTRE GRADÉES -->
+<div class="graded-filter" id="gradedFilter" style="display:none">
+  <span class="graded-lbl">Filtre :</span>
+  <button class="graded-chip active" data-graded="all"        onclick="setGradedFilter('all')">Tout</button>
+  <button class="graded-chip"        data-graded="non_graded" onclick="setGradedFilter('non_graded')">Non gradées</button>
+  <button class="graded-chip"        data-graded="psa"        onclick="setGradedFilter('psa')">PSA</button>
+  <button class="graded-chip"        data-graded="bgs"        onclick="setGradedFilter('bgs')">BGS</button>
+  <button class="graded-chip"        data-graded="cgc"        onclick="setGradedFilter('cgc')">CGC</button>
+</div>
+
+<!-- STATS MARCHÉ -->
+<div class="mkt-bar" id="mktBar">
+  <div class="mkt-card" id="mktCard"></div>
+</div>
+
+<!-- SECTION ALERTES -->
+<div id="sectionAlertes" style="display:none">
+  <div class="alerts-section">
+    <div class="alert-create-card">
+      <h3>+ Nouvelle alerte</h3>
+      <div class="alert-form-row">
+        <div class="alert-form-group grow">
+          <label>Recherche</label>
+          <input type="text" id="newAlertQuery" placeholder="Ex: Dracaufeu ex, Pikachu holo...">
+        </div>
+        <div class="alert-form-group">
+          <label>Prix max (€)</label>
+          <input type="number" id="newAlertPrix" placeholder="Illimité" min="0" style="width:110px">
+        </div>
+        <div class="alert-form-group">
+          <label>Mode</label>
+          <select id="newAlertMode">
+            <option value="large">Large</option>
+            <option value="strict">Précis</option>
+          </select>
+        </div>
+        <button class="alert-create-btn" onclick="createAlert()">Créer l'alerte</button>
+      </div>
+      <div id="alertLimitWarn" class="warn" style="display:none;margin-top:.7rem">
+        ⚠️ Limite de 5 alertes atteinte. Supprime ou désactive une alerte pour en créer une nouvelle.
+      </div>
+    </div>
+    <div class="alert-list" id="alertList">
+      <div class="alert-empty">Chargement...</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION PARAMÈTRES -->
+<div id="sectionParams" style="display:none">
+  <div class="settings-section">
+
+    <!-- Guide de création du bot -->
+    <div class="settings-card">
+      <h3>📖 Comment créer votre bot Telegram ?</h3>
+      <div class="settings-info">
+        <div class="settings-step">
+          <div class="settings-step-num">1</div>
+          <div>Ouvrez <b>Telegram</b> et cherchez <code>@BotFather</code></div>
+        </div>
+        <div class="settings-step">
+          <div class="settings-step-num">2</div>
+          <div>Tapez <code>/newbot</code> → choisissez un nom (ex: <b>Mes Alertes Prix</b>) → choisissez un identifiant (ex: <b>mesalertesprix_bot</b>)</div>
+        </div>
+        <div class="settings-step">
+          <div class="settings-step-num">3</div>
+          <div>BotFather vous envoie un <b>token</b> — copiez-le, c'est votre Token du bot (ressemble à <code>123456789:AAHxxxx...</code>)</div>
+        </div>
+        <div class="settings-step">
+          <div class="settings-step-num">4</div>
+          <div>Cherchez votre bot dans Telegram et cliquez <b>Démarrer</b></div>
+        </div>
+        <div class="settings-step">
+          <div class="settings-step-num">5</div>
+          <div>Cherchez <code>@userinfobot</code> → tapez <code>/start</code> → il vous envoie votre <b>Chat ID</b> (un nombre, ex: <code>123456789</code>)</div>
+        </div>
+        <div class="settings-step">
+          <div class="settings-step-num">6</div>
+          <div>Collez le token et le Chat ID ci-dessous → cliquez <b>Tester</b> puis <b>Sauvegarder</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="settings-card">
+      <h3>🔔 Configuration Telegram</h3>
+      <div class="settings-field">
+        <label>Token du bot</label>
+        <input type="text" id="tgToken" placeholder="123456789:AAHxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+      </div>
+      <div class="settings-field">
+        <label>Chat ID</label>
+        <input type="text" id="tgChatId" placeholder="123456789">
+      </div>
+      <div class="settings-actions">
+        <button class="settings-save-btn" onclick="saveSettings()">💾 Sauvegarder</button>
+        <button class="settings-test-btn" onclick="testTelegram()">📨 Tester</button>
+      </div>
+      <div class="settings-status" id="settingsStatus"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BARRE ALERTE COMPARATEUR -->
+<div class="alert-bar" id="alertBar">
+  <span style="font-size:.8rem;color:var(--muted2);font-weight:700">🔔 Alerte Telegram :</span>
+  <input type="number" id="alertPrix" placeholder="Prix max (€)" min="0">
+  <button class="alert-btn" id="alertBtn" onclick="toggleAlert()">Activer l'alerte</button>
+  <span class="alert-dot" id="alertDot"></span>
+  <span id="alertStatusTxt" style="font-size:.78rem;color:var(--muted)">Inactif</span>
+</div>
+
+<div id="trialBanner" style="display:none"></div>
+
+<div class="container">
+  <div id="results">
+    <div class="placeholder">
+      <div class="big-icon">🛒</div>
+      <p>Tape le nom d'un article et lance la recherche.<br>
+        <small style="color:var(--muted);font-size:.8rem">Mode <b>Precise</b> = mots exacts dans le titre &nbsp;|&nbsp; Mode <b>Large</b> = plus de resultats, moins filtre</small>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+let allItems      = [];
+let shownCount    = 0;
+let activeFilters = new Set();
+let currentMode   = "strict";
+let activeSorts   = [];          // ordre de priorité des tris
+const PAGE_SIZE   = 25;
+
+const SORT_FNS = {
+  prix_asc:  (a, b) => a.prix - b.prix,
+  prix_desc: (a, b) => b.prix - a.prix,
+  date_desc: (a, b) => (b.date_ts || 0) - (a.date_ts || 0),
+  date_asc:  (a, b) => (a.date_ts || 0) - (b.date_ts || 0),
+  titre_asc: (a, b) => a.titre.localeCompare(b.titre, "fr"),
+  source:    (a, b) => a.source.localeCompare(b.source),
+};
+
+function toggleSort(sort) {
+  const idx = activeSorts.indexOf(sort);
+  if (idx !== -1) {
+    activeSorts.splice(idx, 1);   // déjà actif → on retire
+  } else {
+    activeSorts.push(sort);       // nouveau → on ajoute à la fin
+  }
+  updateSortUI();
+  shownCount = PAGE_SIZE;
+  renderTable();
+}
+
+function resetSorts() {
+  activeSorts = ["prix_asc"];
+  updateSortUI();
+  shownCount = PAGE_SIZE;
+  renderTable();
+}
+
+function updateSortUI() {
+  document.querySelectorAll(".sort-btn").forEach(btn => {
+    const s    = btn.dataset.sort;
+    const idx  = activeSorts.indexOf(s);
+    const active = idx !== -1;
+    btn.classList.toggle("active", active);
+    // Affiche le numéro de priorité si plusieurs tris actifs
+    let rankEl = btn.querySelector(".sort-rank");
+    if (active && activeSorts.length > 1) {
+      if (!rankEl) {
+        rankEl = document.createElement("span");
+        rankEl.className = "sort-rank";
+        btn.appendChild(rankEl);
+      }
+      rankEl.textContent = idx + 1;
+    } else if (rankEl) {
+      rankEl.remove();
+    }
+  });
+}
+
+document.getElementById("queryInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") doSearch();
+});
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("huntQuery").addEventListener("keydown", e => {
+    if (e.key === "Enter") doHunt();
+  });
+});
+
+// ── Navigation principale ──────────────────────────────
+function setNav(nav) {
+  const isChasse     = nav === "chasse";
+  const isAlertes    = nav === "alertes";
+  const isComp       = nav === "comparateur";
+  const isParams     = nav === "params";
+  const isHistorique = nav === "historique";
+  const isWatchlist  = nav === "watchlist";
+  const hideResults  = isAlertes || isParams || isHistorique || isWatchlist;
+
+  document.getElementById("sectionComparateur").style.display  = isComp       ? "" : "none";
+  document.getElementById("sectionChasse").style.display       = isChasse     ? "" : "none";
+  document.getElementById("sectionAlertes").style.display      = isAlertes    ? "" : "none";
+  document.getElementById("sectionHistorique").style.display   = isHistorique ? "" : "none";
+  document.getElementById("sectionWatchlist").style.display    = isWatchlist  ? "" : "none";
+  document.getElementById("sectionParams").style.display       = isParams     ? "" : "none";
+  document.getElementById("filtersRow").style.display          = isComp       ? "" : "none";
+  document.getElementById("gradedFilter").style.display        = isComp && allItems.length > 0 ? "" : "none";
+  document.getElementById("etatFilter").style.display          = isComp && allItems.length > 0 ? "" : "none";
+  document.getElementById("mktBar").style.display              = isComp && allItems.length > 0 ? "" : "none";
+  document.getElementById("alertBar").classList.toggle("visible", isComp && allItems.length > 0);
+
+  ["navComparateur","navChasse","navAlertes","navHistorique","navWatchlist","navParams"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("active");
+  });
+  const navId = {comparateur:"navComparateur",chasse:"navChasse",alertes:"navAlertes",
+                 historique:"navHistorique",watchlist:"navWatchlist",params:"navParams"}[nav];
+  if (navId) document.getElementById(navId).classList.add("active");
+
+  if (isAlertes)    loadAlerts();
+  if (isParams)     loadSettings();
+  if (isHistorique) loadHistory();
+  if (isWatchlist)  loadWatchlist();
+
+  document.getElementById("results").style.display = hideResults ? "none" : "";
+  if (!hideResults && nav !== "comparateur") {
+    document.getElementById("results").innerHTML = isChasse ? `
+      <div class="placeholder">
+        <div class="big-icon">🔥</div>
+        <p>Active des mots-cles vendeur, tape ce que tu cherches et lance la chasse.<br>
+          <small style="color:var(--muted);font-size:.8rem">L'appli cherche dans les titres ET les descriptions pour trouver les vendeurs qui ne savent pas ce qu'ils ont.</small>
+        </p>
+      </div>` : `
+      <div class="placeholder">
+        <div class="big-icon">🛒</div>
+        <p>Tape le nom d'un article et lance la recherche.</p>
+      </div>`;
+  }
+}
+
+// ── Chips mots-clés ────────────────────────────────────
+function toggleChip(el) {
+  el.classList.toggle("active");
+}
+
+function addCustomChip() {
+  const input = document.getElementById("huntCustomKw");
+  const val   = input.value.trim();
+  if (!val) return;
+  const chip = document.createElement("span");
+  chip.className = "kw-chip active";
+  chip.textContent = val;
+  chip.onclick = () => toggleChip(chip);
+  document.getElementById("kwChips").appendChild(chip);
+  input.value = "";
+}
+
+function getActiveKeywords() {
+  return [...document.querySelectorAll("#kwChips .kw-chip.active")]
+    .map(c => c.textContent.trim())
+    .filter(Boolean);
+}
+
+// ── Chasse ─────────────────────────────────────────────
+async function doHunt() {
+  const query    = document.getElementById("huntQuery").value.trim();
+  const keywords = getActiveKeywords();
+  if (!query) { document.getElementById("huntQuery").focus(); return; }
+
+  const btn = document.getElementById("huntBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Chasse...';
+
+  document.getElementById("results").innerHTML = `
+    <div class="placeholder">
+      <div class="big-icon"><span class="spinner" style="width:44px;height:44px;border-width:4px"></span></div>
+      <p style="margin-top:1.5rem;color:var(--muted2)">Scan en cours... recherche des bonnes affaires cachees.</p>
+    </div>`;
+
+  try {
+    const resp = await fetch("/hunt", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        query,
+        keywords,
+        pages:     parseInt(document.getElementById("nbPages")?.value || 5),
+        lbc_pages: parseInt(document.getElementById("lbcPages")?.value || 3),
+      }),
+    });
+    const data = await resp.json();
+    if (data.erreur) {
+      document.getElementById("results").innerHTML = `<div class="alert">${esc(data.erreur)}</div>`;
+      return;
+    }
+    renderHuntResults(data, keywords);
+  } catch(e) {
+    document.getElementById("results").innerHTML = `<div class="alert">Erreur reseau : ${esc(e.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = "Chasser 🔥";
+  }
+}
+
+function renderHuntResults(data, keywords) {
+  const items = data.items || [];
+  if (!items.length) {
+    document.getElementById("results").innerHTML = `
+      <div class="placeholder"><div class="big-icon">😕</div>
+      <p>Aucune bonne affaire trouvee.<br><small>Essaie des mots-cles differents ou un terme plus large.</small></p></div>`;
+    return;
+  }
+
+  const sources = data.sources || {};
+  const srcHtml = `
+    <div class="sources-bar">
+      <span style="font-size:.8rem;color:var(--muted2);font-weight:700">${items.length} opportunite${items.length>1?'s':''} trouvee${items.length>1?'s':''}</span>
+      <span class="badge" style="background:rgba(0,194,201,.12);color:var(--vinted)">Vinted ${sources.vinted||0}</span>
+      <span class="badge" style="background:rgba(255,107,53,.12);color:var(--lbc)">LeBonCoin ${sources.lbc||0}</span>
+    </div>`;
+
+  const rows = items.slice(0, 50).map((item, idx) => {
+    const score = item.score || 0;
+    const matched = item.matched_keywords || [];
+    const scoreCls = score >= 8 ? "score-hot" : score >= 4 ? "score-warm" : "score-cool";
+    const scoreIcon = score >= 8 ? "🔥🔥" : score >= 4 ? "🔥" : "💡";
+    const scoreBadge = `<span class="score-badge ${scoreCls}">${scoreIcon} ${score} pts</span>`;
+
+    const photoHtml = item.photo
+      ? `<img src="${esc(item.photo)}" class="photo" loading="lazy" onerror="this.outerHTML='<div class=no-photo>📦</div>'">`
+      : `<div class="no-photo">📦</div>`;
+
+    // Surligne les mots-clés dans la description
+    let descHtml = "";
+    if (item.description) {
+      let excerpt = item.description.substring(0, 180);
+      matched.forEach(kw => {
+        const re = new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), "gi");
+        excerpt = excerpt.replace(re, m => `<span class="kw-highlight">${esc(m)}</span>`);
+      });
+      descHtml = `<div class="desc-excerpt">${excerpt}${item.description.length > 180 ? '…' : ''}</div>`;
+    }
+
+    const dateStr = item.date_ts
+      ? new Date(item.date_ts*1000).toLocaleDateString("fr-FR")
+      : "";
+
+    return `<tr>
+      <td class="rank">${idx===0?"🥇":idx===1?"🥈":idx===2?"🥉":`#${idx+1}`}</td>
+      <td>${photoHtml}</td>
+      <td><span class="badge badge-${item.source}">${esc(item.source)}</span></td>
+      <td>
+        <a href="${esc(item.url)}" class="title-link" target="_blank" rel="noopener">${esc(item.titre)}</a>
+        ${descHtml}
+        ${dateStr ? `<div style="font-size:.7rem;color:var(--muted);margin-top:.2rem">${dateStr}</div>` : ""}
+      </td>
+      <td class="price">${item.prix} €</td>
+      <td>${margeBadge(item.marge)}</td>
+      <td>${scoreBadge}</td>
+    </tr>`;
+  });
+
+  document.getElementById("results").innerHTML = srcHtml + `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th></th><th>Source</th><th>Annonce</th><th>Prix</th><th>Marge est.</th><th>Score</th></tr></thead>
+        <tbody>${rows.join("")}</tbody>
+      </table>
+    </div>`;
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById("tab-strict").classList.toggle("active", mode === "strict");
+  document.getElementById("tab-large").classList.toggle("active", mode === "large");
+  document.getElementById("modeHint").textContent = mode === "strict"
+    ? "Precise : tous les mots doivent etre dans le titre"
+    : "Large : au moins un mot dans le titre — plus de resultats";
+}
+
+async function doSearch() {
+  const query = document.getElementById("queryInput").value.trim();
+  if (!query) return;
+
+  const btn = document.getElementById("searchBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Recherche...';
+
+
+  document.getElementById("results").innerHTML = `
+    <div class="placeholder">
+      <div class="big-icon"><span class="spinner" style="width:44px;height:44px;border-width:4px"></span></div>
+      <p style="margin-top:1.5rem;color:var(--muted2)">Scan en cours sur Vinted et LeBonCoin...</p>
+    </div>`;
+
+  const payload = {
+    query,
+    mode:        currentMode,
+    pages:       parseInt(document.getElementById("nbPages").value),
+    lbc_pages:   parseInt(document.getElementById("lbcPages").value),
+    prix_min:    parseFloat(document.getElementById("prixMin").value) || 0,
+    prix_max:    parseFloat(document.getElementById("prixMax").value) || 0,
+  };
+
+  try {
+    const resp = await fetch("/search", {
+      method:  "POST",
+      headers: {"Content-Type": "application/json"},
+      body:    JSON.stringify(payload),
+    });
+    const data = await resp.json();
+
+    if (data.erreur) {
+      document.getElementById("results").innerHTML =
+        `<div class="alert">Erreur : ${esc(data.erreur)}</div>`;
+      return;
+    }
+
+    allItems     = data.items || [];
+    shownCount   = Math.min(PAGE_SIZE, allItems.length);
+    activeFilters.clear();
+    activeSorts  = ["prix_asc"];
+    renderResults(data);
+    // Montre la barre alerte si des résultats
+    if (allItems.length > 0) {
+      document.getElementById("alertBar").classList.add("visible");
+      stopAlert(); // reset si nouvelle recherche
+      lastSearchQuery    = query;
+      lastSearchPayload  = { ...payload };
+    }
+
+  } catch (e) {
+    document.getElementById("results").innerHTML =
+      `<div class="alert">Erreur reseau : ${esc(e.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Rechercher";
+  }
+}
+
+function toggleFilter(src) {
+  if (src === "tous") {
+    activeFilters.clear();
+  } else {
+    if (activeFilters.has(src)) {
+      activeFilters.delete(src);
+    } else {
+      activeFilters.add(src);
+    }
+  }
+  updateFilterUI();
+  shownCount = PAGE_SIZE;
+  renderTable();
+}
+
+function updateFilterUI() {
+  const allActive = activeFilters.size === 0;
+  document.querySelectorAll(".src-pill").forEach(b => {
+    if (b.dataset.src === "tous") {
+      b.classList.toggle("active", allActive);
+    } else {
+      b.classList.toggle("active", activeFilters.has(b.dataset.src));
+    }
+  });
+}
+
+function loadMore() {
+  shownCount += PAGE_SIZE;
+  renderTable();
+}
+
+function renderTrialBanner(trial) {
+  const el = document.getElementById("trialBanner");
+  if (!el) return;
+  if (!trial) { el.style.display = "none"; return; }
+  const r = trial.remaining;
+  if (r === 0) {
+    el.innerHTML = `⚠️ <b>Essai gratuit terminé</b> — Relancez l'application pour activer votre licence.`;
+    el.className = "trial-banner trial-expired";
+  } else {
+    el.innerHTML = `🔓 Mode essai gratuit — <b>${r} recherche${r > 1 ? "s" : ""}</b> restante${r > 1 ? "s" : ""}. <span style="color:var(--muted)">Achetez une clé pour un accès illimité.</span>`;
+    el.className = "trial-banner trial-active";
+  }
+  el.style.display = "block";
+}
+
+function renderResults(data) {
+  const sources = data.sources || {};
+  const errors  = data.errors  || {};
+  const mode    = data.mode    || "strict";
+
+  renderTrialBanner(data.trial || null);
+
+  let warns = "";
+
+  if (allItems.length === 0) {
+    document.getElementById("results").innerHTML = warns + `
+      <div class="placeholder">
+        <div class="big-icon">😕</div>
+        <p>Aucun resultat.<br>Essaie le mode <b>Large</b> ou un terme different.</p>
+      </div>`;
+    return;
+  }
+
+  const modeBadge = mode === "strict"
+    ? '<span class="mode-badge strict">Precise</span>'
+    : '<span class="mode-badge large">Large</span>';
+
+  const statsHtml = `
+    <div class="stats-row">
+      <div class="stat-card total"><div class="label">Resultats ${modeBadge}</div><div class="value">${data.nb}</div></div>
+      <div class="stat-card min"><div class="label">Moins cher</div><div class="value">${data.prix_min} €</div></div>
+      <div class="stat-card avg"><div class="label">Prix moyen</div><div class="value">${data.prix_moyen} €</div></div>
+      <div class="stat-card max"><div class="label">Plus cher</div><div class="value">${data.prix_max} €</div></div>
+    </div>`;
+
+  const srcHtml = `
+    <div class="sources-bar">
+      <button class="src-pill active" data-src="tous"      onclick="toggleFilter('tous')">
+        <span class="dot" style="background:var(--accent)"></span> Tous (${data.nb})
+      </button>
+      <button class="src-pill" data-src="Vinted"    onclick="toggleFilter('Vinted')">
+        <span class="dot" style="background:var(--vinted)"></span> Vinted (${sources.vinted||0})
+      </button>
+      <button class="src-pill" data-src="LeBonCoin" onclick="toggleFilter('LeBonCoin')">
+        <span class="dot" style="background:var(--lbc)"></span> LeBonCoin (${sources.lbc||0})
+      </button>
+      <span class="filters-hint">Clic = activer/desactiver</span>
+    </div>`;
+
+  const tableHtml = `
+    <div class="sort-bar">
+      <span class="sort-label">Trier :</span>
+      <button class="sort-btn active" data-sort="prix_asc"  onclick="toggleSort('prix_asc')">Prix ↑</button>
+      <button class="sort-btn"        data-sort="prix_desc" onclick="toggleSort('prix_desc')">Prix ↓</button>
+      <button class="sort-btn"        data-sort="date_desc" onclick="toggleSort('date_desc')">Recents</button>
+      <button class="sort-btn"        data-sort="date_asc"  onclick="toggleSort('date_asc')">Anciens</button>
+      <button class="sort-btn"        data-sort="titre_asc" onclick="toggleSort('titre_asc')">Titre A-Z</button>
+      <button class="sort-btn"        data-src="source"     onclick="toggleSort('source')">Source</button>
+      <button class="sort-reset"      onclick="resetSorts()">Reinitialiser</button>
+      <button class="tool-btn csv"    onclick="exportCSV()" style="margin-left:auto">⬇ CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th></th><th>Source</th><th>Annonce</th><th>Prix</th><th>Marge est.</th><th></th></tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div id="loadMoreWrap"></div>
+    </div>`;
+
+  document.getElementById("results").innerHTML = warns + statsHtml + srcHtml + tableHtml;
+
+  // Affiche filtres et stats marché
+  document.getElementById("gradedFilter").style.display = "";
+  document.getElementById("etatFilter").style.display   = "";
+  loadMarketStats(data.query || document.getElementById("queryInput").value.trim());
+
+  renderTable();
+}
+
+let gradedFilter  = "all";
+let etatFilter    = "all";
+let watchlistUrls = new Set();
+let _visibleItems = [];
+
+function setEtatFilter(val) {
+  etatFilter = val;
+  document.querySelectorAll(".graded-chip[data-etat]").forEach(c => {
+    c.classList.toggle("active", c.dataset.etat === val);
+  });
+  shownCount = PAGE_SIZE;
+  renderTable();
+}
+
+function setGradedFilter(val) {
+  gradedFilter = val;
+  document.querySelectorAll(".graded-chip").forEach(c => {
+    c.classList.toggle("active", c.dataset.graded === val);
+  });
+  shownCount = PAGE_SIZE;
+  renderTable();
+}
+
+function isGraded(titre, type) {
+  const t = titre.toUpperCase();
+  const grades = ["PSA","BGS","CGC","ACE","GMA","CSG"];
+  const hasGrade = grades.some(g => t.includes(g));
+  if (type === "all") return true;
+  if (type === "non_graded") return !hasGrade;
+  if (type === "psa") return t.includes("PSA");
+  if (type === "bgs") return t.includes("BGS");
+  if (type === "cgc") return t.includes("CGC");
+  return true;
+}
+
+function renderTable() {
+  let filtered = activeFilters.size === 0
+    ? [...allItems]
+    : allItems.filter(i => activeFilters.has(i.source));
+
+  // Filtre gradées
+  if (gradedFilter !== "all") {
+    filtered = filtered.filter(i => isGraded(i.titre, gradedFilter));
+  }
+
+  // Filtre état
+  if (etatFilter !== "all") {
+    filtered = filtered.filter(i => {
+      const e = (i.etat || "").toLowerCase();
+      if (etatFilter === "neuf")         return e.includes("neuf");
+      if (etatFilter === "tbe")          return e.includes("très bon") || e.includes("tres bon");
+      if (etatFilter === "be")           return e.includes("bon état") || e.includes("bon etat");
+      if (etatFilter === "satisfaisant") return e.includes("satisfaisant");
+      return true;
+    });
+  }
+
+  // Applique les tris en cascade (primaire, secondaire, tertiaire...)
+  if (activeSorts.length === 0) activeSorts = ["prix_asc"];
+  filtered.sort((a, b) => {
+    for (const s of activeSorts) {
+      const fn  = SORT_FNS[s];
+      const cmp = fn ? fn(a, b) : 0;
+      if (cmp !== 0) return cmp;
+    }
+    return 0;
+  });
+
+  if (!filtered.length) {
+    document.getElementById("tableBody").innerHTML =
+      `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted)">Aucun resultat pour ce filtre.</td></tr>`;
+    document.getElementById("loadMoreWrap").innerHTML = "";
+    return;
+  }
+
+  const visible  = filtered.slice(0, shownCount);
+  _visibleItems  = visible;
+  const maxPrice = Math.max(...filtered.map(i => i.prix));
+
+  // Calcule la médiane pour détecter les opportunités
+  const allPrices = filtered.map(i => i.prix);
+  const medianPrice = allPrices.length ? allPrices.slice().sort((a,b)=>a-b)[Math.floor(allPrices.length/2)] : 0;
+
+  const rows = visible.map((item, idx) => {
+    const globalIdx  = filtered.indexOf(item);
+    const medal      = globalIdx === 0 ? "🥇" : globalIdx === 1 ? "🥈" : globalIdx === 2 ? "🥉" : `#${globalIdx+1}`;
+    const priceClass = globalIdx === 0 ? "price top1" : (item.prix === maxPrice ? "price is-max" : "price");
+    const photoHtml  = item.photo
+      ? `<img src="${esc(item.photo)}" class="photo" loading="lazy" onerror="this.outerHTML='<div class=no-photo>📦</div>'">`
+      : `<div class="no-photo">📦</div>`;
+    const isOpp     = medianPrice > 0 && item.prix < medianPrice * 0.70;
+    const oppTag    = isOpp ? `<span class="opp-tag">🎯 Opp.</span>` : "";
+    const rowClass  = isOpp ? " class=\"is-opp\"" : "";
+    const inWl  = watchlistUrls.has(item.url);
+    const wlBtn = `<button class="wl-add-btn${inWl?" added":""}" onclick="addToWatchlist(${idx})" ${inWl?"disabled":""}>
+                    ${inWl?"⭐":"☆"}
+                  </button>`;
+    return `<tr${rowClass}>
+      <td class="rank">${medal}</td>
+      <td>${photoHtml}</td>
+      <td><span class="badge badge-${item.source}">${esc(item.source)}</span></td>
+      <td><a href="${esc(item.url)}" class="title-link" target="_blank" rel="noopener">${esc(item.titre)}</a>${oppTag}${item.etat ? `<span style="font-size:.68rem;color:var(--muted);margin-left:.4rem">${esc(item.etat)}</span>` : ""}</td>
+      <td class="${priceClass}">${item.prix} €</td>
+      <td>${margeBadge(item.marge)}</td>
+      <td>${wlBtn}</td>
+    </tr>`;
+  });
+
+  document.getElementById("tableBody").innerHTML = rows.join("");
+
+  // Bouton "Charger plus"
+  const wrap = document.getElementById("loadMoreWrap");
+  if (shownCount < filtered.length) {
+    const remaining = filtered.length - shownCount;
+    wrap.innerHTML = `
+      <div class="load-more-wrap">
+        <button class="load-more-btn" onclick="loadMore()">
+          Charger ${Math.min(PAGE_SIZE, remaining)} de plus (${remaining} restants)
+        </button>
+      </div>`;
+  } else {
+    wrap.innerHTML = `<div style="text-align:center;padding:.8rem;color:var(--muted);font-size:.8rem">Tous les resultats affiches (${filtered.length})</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════
+//  SURVEILLANCE — ALERTES
+// ══════════════════════════════════════════════
+let watchActive      = false;
+let watchTimer       = null;
+let watchSeenUrls    = new Set();
+let watchQuery       = "";
+let watchKeywords    = [];
+let watchNewCount    = 0;
+const originalTitle  = document.title;
+
+function toggleWatch() {
+  watchActive ? stopWatch() : startWatch();
+}
+
+function startWatch() {
+  watchQuery    = document.getElementById("huntQuery").value.trim();
+  watchKeywords = getActiveKeywords();
+  if (!watchQuery) {
+    document.getElementById("huntQuery").focus();
+    return;
+  }
+  watchActive   = true;
+  watchNewCount = 0;
+
+  // Demande permission notif navigateur (= toast Windows)
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+
+  // Premier scan pour initialiser les URLs vues (sans alerter)
+  runWatchScan(true);
+
+  const minutes = parseInt(document.getElementById("watchInterval").value);
+  watchTimer = setInterval(() => runWatchScan(false), minutes * 60 * 1000);
+  updateWatchUI();
+}
+
+function stopWatch() {
+  watchActive = false;
+  clearInterval(watchTimer);
+  watchTimer    = null;
+  watchSeenUrls = new Set();
+  watchNewCount = 0;
+  document.title = originalTitle;
+  updateWatchUI();
+}
+
+function updateWatchUI() {
+  const btn  = document.getElementById("watchBtn");
+  const dot  = document.getElementById("watchDot");
+  const txt  = document.getElementById("watchStatusText");
+  if (watchActive) {
+    btn.textContent = "⏹ Arrêter";
+    btn.classList.add("on");
+    dot.classList.add("active");
+    const m = document.getElementById("watchInterval").value;
+    txt.textContent = `Surveillance active — scan toutes les ${m} min`;
+  } else {
+    btn.textContent = "👁 Surveiller";
+    btn.classList.remove("on");
+    dot.classList.remove("active");
+    txt.textContent = "Inactif";
+  }
+}
+
+async function runWatchScan(isInit) {
+  try {
+    const resp = await fetch("/hunt", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        query:     watchQuery,
+        keywords:  watchKeywords,
+        pages:     3,
+        lbc_pages: 2,
+      }),
+    });
+    const data  = await resp.json();
+    const items = data.items || [];
+
+    if (isInit) {
+      items.forEach(i => watchSeenUrls.add(i.url));
+      updateWatchStatus(`Initialise — ${items.length} annonces existantes ignorees`);
+      return;
+    }
+
+    const newItems = items.filter(i => i.url && !watchSeenUrls.has(i.url));
+    newItems.forEach(i => watchSeenUrls.add(i.url));
+
+    updateWatchStatus(`Dernier scan : ${new Date().toLocaleTimeString("fr-FR")} — ${watchSeenUrls.size} vues`);
+
+    if (newItems.length > 0) {
+      watchNewCount += newItems.length;
+      fireAlerts(newItems);
+    }
+  } catch(e) {
+    // scan silencieux
+  }
+}
+
+function updateWatchStatus(msg) {
+  const txt = document.getElementById("watchStatusText");
+  if (txt && watchActive) txt.textContent = msg;
+}
+
+function fireAlerts(newItems) {
+  // 1. SON
+  playBeep();
+
+  // 2. NOTIFICATION WINDOWS (via API navigateur)
+  if ("Notification" in window && Notification.permission === "granted") {
+    const top  = newItems[0];
+    const body = newItems.slice(0, 3).map(i => `• ${i.titre.substring(0,50)} — ${i.prix}€`).join("\n");
+    const notif = new Notification(
+      `🔥 ${newItems.length} nouvelle${newItems.length>1?"s":""} bonne${newItems.length>1?"s":""} affaire${newItems.length>1?"s":""}`,
+      { body, tag: "pricescout-hunt" }
+    );
+    notif.onclick = () => { window.focus(); notif.close(); };
+    setTimeout(() => notif.close(), 8000);
+  }
+
+  // 3. BADGE TITRE DE PAGE
+  document.title = `(${watchNewCount} 🔥) ${originalTitle}`;
+
+  // 4. TELEGRAM (si configuré)
+  fetch("/notify", {
+    method:  "POST",
+    headers: {"Content-Type": "application/json"},
+    body:    JSON.stringify({ items: newItems.slice(0, 5), query: watchQuery }),
+  }).catch(() => {});
+
+  // 5. AFFICHE LES NOUVELLES ANNONCES EN HAUT DES RÉSULTATS
+  injectNewItems(newItems);
+}
+
+function injectNewItems(newItems) {
+  const tbody = document.getElementById("tableBody");
+  if (!tbody) {
+    // Pas encore de tableau → re-render complet
+    renderHuntResults({ items: newItems, sources: {} }, watchKeywords);
+    return;
+  }
+  const rows = newItems.map(item => {
+    const score     = item.score || 0;
+    const scoreCls  = score >= 8 ? "score-hot" : score >= 4 ? "score-warm" : "score-cool";
+    const scoreIcon = score >= 8 ? "🔥🔥" : score >= 4 ? "🔥" : "💡";
+    const photoHtml = item.photo
+      ? `<img src="${esc(item.photo)}" class="photo" loading="lazy" onerror="this.outerHTML='<div class=no-photo>📦</div>'">`
+      : `<div class="no-photo">📦</div>`;
+    const matched = item.matched_keywords || [];
+    let descHtml = "";
+    if (item.description) {
+      let excerpt = item.description.substring(0, 180);
+      matched.forEach(kw => {
+        const re = new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"), "gi");
+        excerpt = excerpt.replace(re, m => `<span class="kw-highlight">${esc(m)}</span>`);
+      });
+      descHtml = `<div class="desc-excerpt">${excerpt}</div>`;
+    }
+    return `<tr style="background:rgba(255,107,53,.08);border-left:3px solid #ff6b35">
+      <td class="rank">🆕</td>
+      <td>${photoHtml}</td>
+      <td><span class="badge badge-${item.source}">${esc(item.source)}</span></td>
+      <td><a href="${esc(item.url)}" class="title-link" target="_blank" rel="noopener">${esc(item.titre)}</a>${descHtml}</td>
+      <td class="price">${item.prix} €</td>
+      <td>${margeBadge(item.marge)}</td>
+      <td><span class="score-badge ${scoreCls}">${scoreIcon} ${score}</span></td>
+    </tr>`;
+  }).join("");
+  tbody.insertAdjacentHTML("afterbegin", rows);
+}
+
+function playBeep() {
+  try {
+    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+  } catch(e) {}
+}
+
+// ── Gestionnaire d'Alertes ────────────────────
+async function loadAlerts() {
+  try {
+    const resp   = await fetch("/alerts");
+    const alerts = await resp.json();
+    renderAlertList(alerts);
+  } catch(e) {
+    document.getElementById("alertList").innerHTML =
+      `<div class="alert-empty">Erreur de chargement.</div>`;
+  }
+}
+
+const ALERT_LIMIT = 5;
+
+function renderAlertList(alerts) {
+  const list        = document.getElementById("alertList");
+  const activeCount = alerts.filter(a => a.active !== false).length;
+  const limitReached = activeCount >= ALERT_LIMIT;
+  const createBtn   = document.querySelector(".alert-create-btn");
+  const limitWarn   = document.getElementById("alertLimitWarn");
+
+  if (createBtn) {
+    createBtn.disabled = limitReached;
+    createBtn.style.opacity = limitReached ? ".4" : "";
+    createBtn.style.cursor  = limitReached ? "not-allowed" : "";
+  }
+  if (limitWarn) {
+    limitWarn.style.display = limitReached ? "" : "none";
+  }
+
+  if (!alerts.length) {
+    list.innerHTML = `<div class="alert-empty">
+      <div style="font-size:2.5rem;margin-bottom:.8rem">🔔</div>
+      <p>Aucune alerte active.<br><small>Crée une alerte pour être notifié dès qu'une annonce correspond à ta recherche.</small></p>
+    </div>`;
+    return;
+  }
+  list.innerHTML = alerts.map(a => {
+    const pmax     = a.prix_max > 0 ? ` ≤ ${a.prix_max} €` : "";
+    const modeLabel = a.mode === "strict" ? "Précis" : "Large";
+    const lastScan  = a.last_scan
+      ? `Dernier scan : ${new Date(a.last_scan*1000).toLocaleTimeString("fr-FR")}`
+      : "Pas encore scanné";
+    const lastHit  = a.last_hit
+      ? `Dernière détection : ${new Date(a.last_hit*1000).toLocaleDateString("fr-FR")}`
+      : "Aucune détection";
+    const hitsHtml = a.nb_hits > 0
+      ? `<span class="alert-hits">🔥 ${a.nb_hits} trouvée${a.nb_hits>1?"s":""}</span>`
+      : "";
+    const banWarn  = a.vinted_ban_suspect
+      ? `<span style="background:rgba(255,200,87,.15);color:var(--yellow);border-radius:8px;padding:.15rem .55rem;font-size:.75rem;font-weight:800">⚠️ Vinted ne répond plus</span>`
+      : "";
+    const toggleLabel = a.active ? "⏸ Pause" : "▶ Activer";
+    const prixMaxVal  = a.prix_max > 0 ? a.prix_max : "";
+    return `<div class="alert-item ${a.active ? "" : "inactive"}" id="alert-${a.id}" style="flex-wrap:wrap">
+      <div id="alert-view-${a.id}" style="display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;width:100%">
+        <div style="font-size:1.4rem">${a.active ? "🔔" : "🔕"}</div>
+        <div class="alert-info">
+          <div class="alert-query">${esc(a.query)}${esc(pmax)}</div>
+          <div class="alert-meta">
+            <span>${modeLabel}</span>
+            <span>${lastScan}</span>
+            <span>${lastHit}</span>
+            ${hitsHtml}
+            ${banWarn}
+          </div>
+        </div>
+        <div class="alert-actions">
+          <button class="alert-action-btn" onclick="editAlert('${a.id}')">✏️ Modifier</button>
+          <button class="alert-action-btn" onclick="toggleAlertItem('${a.id}')">${toggleLabel}</button>
+          <button class="alert-action-btn del" onclick="deleteAlertItem('${a.id}')">🗑 Suppr.</button>
+        </div>
+      </div>
+      <div id="alert-edit-${a.id}" style="display:none;flex-direction:column;gap:.6rem;width:100%;padding-top:.6rem;border-top:1px solid var(--border);margin-top:.4rem">
+        <div class="alert-form-row">
+          <div class="alert-form-group grow">
+            <label>Recherche</label>
+            <input type="text" id="eq-${a.id}" value="${esc(a.query)}" placeholder="Ex: Dracaufeu ex...">
+          </div>
+          <div class="alert-form-group">
+            <label>Prix max (€)</label>
+            <input type="number" id="ep-${a.id}" value="${prixMaxVal}" placeholder="Illimité" min="0" style="width:110px">
+          </div>
+          <div class="alert-form-group">
+            <label>Mode</label>
+            <select id="em-${a.id}">
+              <option value="large" ${a.mode==="large"?"selected":""}>Large</option>
+              <option value="strict" ${a.mode==="strict"?"selected":""}>Précis</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <button class="alert-create-btn" onclick="saveEditAlert('${a.id}')">💾 Sauvegarder</button>
+          <button class="alert-action-btn" onclick="cancelEditAlert('${a.id}')">Annuler</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function createAlert() {
+  const query = document.getElementById("newAlertQuery").value.trim();
+  if (!query) { document.getElementById("newAlertQuery").focus(); return; }
+  const btn = document.querySelector(".alert-create-btn");
+  btn.textContent = "Création..."; btn.disabled = true;
+  try {
+    const resp = await fetch("/alerts", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        query,
+        prix_max: parseFloat(document.getElementById("newAlertPrix").value) || 0,
+        mode:     document.getElementById("newAlertMode").value,
+      }),
+    });
+    const data = await resp.json();
+    if (data.erreur) { alert(data.erreur); return; }
+    document.getElementById("newAlertQuery").value = "";
+    document.getElementById("newAlertPrix").value  = "";
+    loadAlerts();
+  } catch(e) {} finally {
+    btn.textContent = "Créer l'alerte"; btn.disabled = false;
+  }
+}
+
+async function deleteAlertItem(id) {
+  if (!confirm("Supprimer cette alerte ?")) return;
+  await fetch(`/alerts/${id}`, { method: "DELETE" });
+  loadAlerts();
+}
+
+async function toggleAlertItem(id) {
+  await fetch(`/alerts/${id}/toggle`, { method: "POST" });
+  loadAlerts();
+}
+
+function editAlert(id) {
+  document.getElementById(`alert-view-${id}`).style.display = "none";
+  const editDiv = document.getElementById(`alert-edit-${id}`);
+  editDiv.style.display = "flex";
+}
+
+function cancelEditAlert(id) {
+  document.getElementById(`alert-edit-${id}`).style.display = "none";
+  document.getElementById(`alert-view-${id}`).style.display = "flex";
+}
+
+async function saveEditAlert(id) {
+  const query   = document.getElementById(`eq-${id}`).value.trim();
+  const prixMax = document.getElementById(`ep-${id}`).value;
+  const mode    = document.getElementById(`em-${id}`).value;
+  if (!query) { document.getElementById(`eq-${id}`).focus(); return; }
+  const btn = document.querySelector(`#alert-edit-${id} .alert-create-btn`);
+  if (btn) { btn.textContent = "Sauvegarde..."; btn.disabled = true; }
+  try {
+    await fetch(`/alerts/${id}`, {
+      method:  "PUT",
+      headers: {"Content-Type": "application/json"},
+      body:    JSON.stringify({ query, prix_max: parseFloat(prixMax) || 0, mode }),
+    });
+    loadAlerts();
+  } catch(e) {
+    if (btn) { btn.textContent = "💾 Sauvegarder"; btn.disabled = false; }
+  }
+}
+
+// ── Alerte Comparateur ────────────────────────
+let alertActive       = false;
+let alertTimer        = null;
+let alertSeenUrls     = new Set();
+let lastSearchQuery   = "";
+let lastSearchPayload = {};
+
+function toggleAlert() {
+  alertActive ? stopAlert() : startAlert();
+}
+
+function startAlert() {
+  if (!lastSearchQuery) return;
+  alertActive = true;
+  // Initialise les URLs déjà vues
+  allItems.forEach(i => alertSeenUrls.add(i.url));
+  alertTimer = setInterval(runAlertScan, 5 * 60 * 1000); // toutes les 5 min
+  updateAlertUI();
+}
+
+function stopAlert() {
+  alertActive = false;
+  clearInterval(alertTimer);
+  alertTimer    = null;
+  alertSeenUrls = new Set();
+  updateAlertUI();
+}
+
+function updateAlertUI() {
+  const btn = document.getElementById("alertBtn");
+  const dot = document.getElementById("alertDot");
+  const txt = document.getElementById("alertStatusTxt");
+  if (!btn) return;
+  if (alertActive) {
+    btn.textContent = "⏹ Arrêter l'alerte";
+    btn.classList.add("on");
+    dot.classList.add("on");
+    const pmax = document.getElementById("alertPrix").value;
+    txt.textContent = `Surveillance active${pmax ? ` — prix ≤ ${pmax}€` : ""} — toutes les 5 min`;
+  } else {
+    btn.textContent = "Activer l'alerte";
+    btn.classList.remove("on");
+    dot.classList.remove("on");
+    txt.textContent = "Inactif";
+  }
+}
+
+async function runAlertScan() {
+  try {
+    const resp = await fetch("/search", {
+      method:  "POST",
+      headers: {"Content-Type": "application/json"},
+      body:    JSON.stringify(lastSearchPayload),
+    });
+    const data  = await resp.json();
+    const items = data.items || [];
+    const pmax  = parseFloat(document.getElementById("alertPrix").value) || 0;
+
+    const newItems = items.filter(i => {
+      if (alertSeenUrls.has(i.url)) return false;
+      if (pmax > 0 && i.prix > pmax) return false;
+      return true;
+    });
+    newItems.forEach(i => alertSeenUrls.add(i.url));
+
+    if (newItems.length > 0) {
+      playBeep();
+      if ("Notification" in window && Notification.permission === "granted") {
+        const n = new Notification(
+          `🔔 ${newItems.length} nouvelle${newItems.length>1?"s":""} annonce${newItems.length>1?"s":""} — ${lastSearchQuery}`,
+          { body: newItems.slice(0,3).map(i=>`• ${i.titre.substring(0,50)} — ${i.prix}€`).join("\n"), tag:"pricescout-alert" }
+        );
+        n.onclick = () => { window.focus(); n.close(); };
+        setTimeout(() => n.close(), 8000);
+      }
+      document.title = `(🔔 ${newItems.length}) ${originalTitle}`;
+      fetch("/notify", {
+        method:  "POST",
+        headers: {"Content-Type":"application/json"},
+        body:    JSON.stringify({ items: newItems.slice(0,5), query: lastSearchQuery }),
+      }).catch(()=>{});
+    }
+    document.getElementById("alertStatusTxt").textContent =
+      `Dernier scan : ${new Date().toLocaleTimeString("fr-FR")} — ${newItems.length} nouvelle${newItems.length>1?"s":""}`;
+  } catch(e) {}
+}
+
+function margeBadge(marge) {
+  if (!marge || marge.profit === undefined) return `<span class="marge-badge marge-neu">—</span>`;
+  const p   = marge.profit;
+  const pct = marge.pct;
+  const cls = pct >= 50 ? "marge-hot" : pct >= 20 ? "marge-warm" : pct >= 0 ? "marge-neu" : "marge-cold";
+  const icon = pct >= 50 ? "🟢" : pct >= 20 ? "🟡" : pct >= 0 ? "⚪" : "🔴";
+  const sign = p >= 0 ? "+" : "";
+  return `<span class="marge-badge ${cls}">${icon} ${sign}${p} €<span class="marge-sub">${sign}${pct}%</span></span>`;
+}
+
+
+function esc(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── Paramètres Telegram ───────────────────────
+async function loadSettings() {
+  try {
+    const resp = await fetch("/settings");
+    const data = await resp.json();
+    if (data.token)   document.getElementById("tgToken").value  = data.token;
+    if (data.chat_id) document.getElementById("tgChatId").value = data.chat_id;
+  } catch(e) {}
+}
+
+async function saveSettings() {
+  const token   = document.getElementById("tgToken").value.trim();
+  const chat_id = document.getElementById("tgChatId").value.trim();
+  const status  = document.getElementById("settingsStatus");
+  if (!token || !chat_id) {
+    status.className = "settings-status err";
+    status.textContent = "Remplissez les deux champs avant de sauvegarder.";
+    return;
+  }
+  try {
+    const resp = await fetch("/settings", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ token, chat_id }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      status.className = "settings-status ok";
+      status.textContent = "Paramètres sauvegardés avec succès.";
+    } else {
+      status.className = "settings-status err";
+      status.textContent = "Erreur lors de la sauvegarde.";
+    }
+  } catch(e) {
+    status.className = "settings-status err";
+    status.textContent = "Erreur réseau.";
+  }
+}
+
+async function testTelegram() {
+  const token   = document.getElementById("tgToken").value.trim();
+  const chat_id = document.getElementById("tgChatId").value.trim();
+  const status  = document.getElementById("settingsStatus");
+  const btn     = document.querySelector(".settings-test-btn");
+  if (!token || !chat_id) {
+    status.className = "settings-status err";
+    status.textContent = "Remplissez les deux champs d'abord.";
+    return;
+  }
+  btn.textContent = "Envoi...";
+  btn.disabled = true;
+  try {
+    const resp = await fetch("/settings/test", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ token, chat_id }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      status.className = "settings-status ok";
+      status.textContent = "Message de test envoyé sur Telegram !";
+    } else {
+      status.className = "settings-status err";
+      status.textContent = "Echec : " + (data.error || "Vérifiez votre token et Chat ID.");
+    }
+  } catch(e) {
+    status.className = "settings-status err";
+    status.textContent = "Erreur réseau.";
+  } finally {
+    btn.textContent = "📨 Tester";
+    btn.disabled = false;
+  }
+}
+
+// ══════════════════════════════════════════════
+//  EXPORT CSV
+// ══════════════════════════════════════════════
+function exportCSV() {
+  if (!allItems.length) return;
+  const headers = ["Source","Titre","Prix (€)","URL","Date"];
+  const rows = allItems.map(i => [
+    i.source,
+    `"${(i.titre||"").replace(/"/g,'""')}"`,
+    i.prix,
+    i.url,
+    i.date_ts ? new Date(i.date_ts*1000).toLocaleDateString("fr-FR") : "",
+  ]);
+  const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const a    = document.createElement("a");
+  a.href     = URL.createObjectURL(blob);
+  a.download = `pricescout_${document.getElementById("queryInput").value.replace(/\s+/g,"_")}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ══════════════════════════════════════════════
+//  HISTORIQUE
+// ══════════════════════════════════════════════
+async function loadHistory() {
+  try {
+    const resp    = await fetch("/history");
+    const entries = await resp.json();
+    renderHistory(entries);
+  } catch(e) {
+    document.getElementById("historyList").innerHTML = `<div style="text-align:center;padding:2rem;color:var(--muted)">Erreur de chargement.</div>`;
+  }
+}
+
+function renderHistory(entries) {
+  const el = document.getElementById("historyList");
+  if (!entries.length) {
+    el.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--muted)">
+      <div style="font-size:2.5rem;margin-bottom:.8rem">📭</div>
+      <p>Aucune recherche enregistrée.<br><small>Elles apparaîtront automatiquement après chaque recherche.</small></p>
+    </div>`;
+    return;
+  }
+  el.innerHTML = entries.map(e => {
+    const d     = new Date(e.ts * 1000);
+    const dateStr = d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"});
+    const modeBadge = e.mode === "strict"
+      ? `<span style="background:rgba(108,71,255,.2);color:var(--accent2);padding:.1rem .4rem;border-radius:6px;font-size:.7rem;font-weight:800">Précis</span>`
+      : `<span style="background:rgba(255,200,87,.15);color:var(--yellow);padding:.1rem .4rem;border-radius:6px;font-size:.7rem;font-weight:800">Large</span>`;
+    return `<div class="history-card" onclick="replaySearch('${esc(e.query)}','${e.mode}')">
+      <div class="history-icon">🔎</div>
+      <div class="history-info">
+        <div class="history-query">${esc(e.query)} ${modeBadge}</div>
+        <div class="history-meta">
+          <span>${dateStr}</span>
+          <span>${e.nb} résultat${e.nb>1?"s":""}</span>
+        </div>
+      </div>
+      <div class="history-prices">
+        <div class="history-price-item"><span class="history-price-lbl">Min</span><span class="history-price-val" style="color:var(--green)">${e.prix_min}€</span></div>
+        <div class="history-price-item"><span class="history-price-lbl">Méd.</span><span class="history-price-val" style="color:var(--accent2)">${e.prix_median||e.prix_moyen}€</span></div>
+        <div class="history-price-item"><span class="history-price-lbl">Max</span><span class="history-price-val" style="color:var(--red)">${e.prix_max}€</span></div>
+      </div>
+      <button class="h-btn replay" onclick="event.stopPropagation();replaySearch('${esc(e.query)}','${e.mode}')">↩ Relancer</button>
+    </div>`;
+  }).join("");
+}
+
+function replaySearch(query, mode) {
+  setNav("comparateur");
+  document.getElementById("queryInput").value = query;
+  if (mode) {
+    currentMode = mode;
+    document.getElementById("tab-strict").classList.toggle("active", mode === "strict");
+    document.getElementById("tab-large").classList.toggle("active", mode === "large");
+  }
+  doSearch();
+}
+
+async function clearHistory() {
+  if (!confirm("Effacer tout l'historique ?")) return;
+  await fetch("/history", { method: "DELETE" });
+  loadHistory();
+}
+
+// ══════════════════════════════════════════════
+//  WATCHLIST
+// ══════════════════════════════════════════════
+async function loadWatchlist() {
+  try {
+    const resp = await fetch("/watchlist");
+    const wl   = await resp.json();
+    watchlistUrls = new Set(wl.map(w => w.url));
+    renderWatchlist(wl);
+  } catch(e) {
+    document.getElementById("watchlistItems").innerHTML = `<div style="text-align:center;padding:2rem;color:var(--muted)">Erreur.</div>`;
+  }
+}
+
+function renderWatchlist(items) {
+  const el = document.getElementById("watchlistItems");
+  if (!items.length) {
+    el.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--muted)">
+      <div style="font-size:2.5rem;margin-bottom:.8rem">⭐</div>
+      <p>Aucune annonce sauvegardée.<br><small>Clique sur ☆ dans les résultats pour sauvegarder une annonce.</small></p>
+    </div>`;
+    return;
+  }
+  el.innerHTML = items.map(w => {
+    const dateStr = new Date(w.ts*1000).toLocaleDateString("fr-FR");
+    const photoHtml = w.photo
+      ? `<img src="${esc(w.photo)}" class="wl-photo" onerror="this.outerHTML='<div class=wl-no-photo>📦</div>'">`
+      : `<div class="wl-no-photo">📦</div>`;
+    return `<div class="wl-card">
+      ${photoHtml}
+      <div class="wl-info">
+        <div class="wl-title"><a href="${esc(w.url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(w.titre)}</a></div>
+        <div class="wl-meta">
+          <span class="badge badge-${w.source}">${esc(w.source)}</span>
+          <span>${dateStr}</span>
+          ${w.query ? `<span>🔎 ${esc(w.query)}</span>` : ""}
+        </div>
+      </div>
+      <div class="wl-price">${w.prix} €</div>
+      <div>${margeBadge(w.marge)}</div>
+      <button class="wl-del" onclick="removeFromWatchlist('${w.id}')">🗑</button>
+    </div>`;
+  }).join("");
+}
+
+async function addToWatchlist(idx) {
+  const item  = _visibleItems[idx];
+  if (!item) return;
+  const query = document.getElementById("queryInput").value.trim();
+  try {
+    await fetch("/watchlist", {
+      method:  "POST",
+      headers: {"Content-Type": "application/json"},
+      body:    JSON.stringify({ ...item, query }),
+    });
+    watchlistUrls.add(item.url);
+    renderTable();
+  } catch(e) {}
+}
+
+async function removeFromWatchlist(id) {
+  await fetch(`/watchlist/${id}`, { method: "DELETE" });
+  loadWatchlist();
+}
+
+// ══════════════════════════════════════════════
+//  STATS MARCHÉ
+// ══════════════════════════════════════════════
+async function loadMarketStats(query) {
+  const bar  = document.getElementById("mktBar");
+  const card = document.getElementById("mktCard");
+  if (!query) { bar.style.display = "none"; return; }
+  try {
+    const resp = await fetch("/market-stats", {
+      method:  "POST",
+      headers: {"Content-Type": "application/json"},
+      body:    JSON.stringify({ query }),
+    });
+    const data = await resp.json();
+    if (!data.available) { bar.style.display = "none"; return; }
+    const last = data.last_ts ? new Date(data.last_ts*1000).toLocaleDateString("fr-FR") : "";
+    card.innerHTML = `
+      <span class="mkt-title">📈 Historique prix</span>
+      ${data.tendance_7j  ? `<div class="mkt-item"><span class="mkt-lbl">7 jours</span><span class="mkt-val">${data.tendance_7j} €</span></div>` : ""}
+      ${data.tendance_30j ? `<div class="mkt-item"><span class="mkt-lbl">30 jours</span><span class="mkt-val">${data.tendance_30j} €</span></div>` : ""}
+      ${data.tendance_all ? `<div class="mkt-item"><span class="mkt-lbl">Médiane globale</span><span class="mkt-val">${data.tendance_all} €</span></div>` : ""}
+      <div class="mkt-item"><span class="mkt-lbl">Nb recherches</span><span class="mkt-val">${data.nb_recherches}</span></div>
+      ${last ? `<div style="font-size:.7rem;color:var(--muted);margin-left:auto">Dernière : ${last}</div>` : ""}`;
+    bar.style.display = "";
+  } catch(e) { bar.style.display = "none"; }
+}
+
+// Charge la watchlist au démarrage pour avoir les URLs en cache
+loadWatchlist();
+</script>
+</body>
+</html>

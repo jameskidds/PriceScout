@@ -1,0 +1,14 @@
+keygen.py
+keys_generated.txt
+telegram_key.txt
+.license
+.trial
+alerts.json
+history.json
+watchlist.json
+dist/
+build/
+__pycache__/
+*.zip
+*.pyc
+MES_INFOS_TELEGRAM_PERSO.txt
