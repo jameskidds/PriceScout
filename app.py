@@ -335,6 +335,56 @@ def notify():
     return jsonify({"ok": True})
 
 
+_NON_EXPERT_KW = [
+    "mon fils", "ma fille", "mon enfant", "mes enfants", "mon neveu",
+    "ma niece", "mon frere", "ma soeur", "mon petit fils", "cadeau de",
+    "pour noel", "anniversaire", "offert par", "recu en cadeau",
+    "vide chambre", "vide grenier", "vide-grenier", "vide maison",
+    "demenagement", "fait le tri", "fait du tri", "on fait le tri",
+    "placard", "cave", "range dans",
+    "trouve dans", "trouve au", "trouvai", "heritage", "divorce",
+    "sais pas", "je sais pas", "connais pas", "pas connaisseur",
+    "a estimer", "faire offre", "prix libre", "prix a discuter",
+    "pas la valeur", "je ne connais pas",
+    "lot de", "lot d", "en vrac", "tout ensemble", "a prendre ensemble",
+    "pokmon", "pokkemon", "pikatchou", "pikatchu",
+    "carte de mon", "cartes de mon", "cartes de ma",
+    "idee cadeau", "a donner", "a saisir",
+]
+
+_EXPERT_KW = [
+    "psa", "bgs", "cgc", "graded", "grade", "gradee",
+    "near mint", "mint condition", "centering", "centrage", "gem mint",
+    "extension", "set complet", "serie complete",
+    "full art", "secret rare", "ultra rare", "premiere edition",
+]
+
+
+def _seller_profile(titre: str, desc: str) -> dict:
+    """Détecte si le vendeur est un non-expert, incertain ou expert."""
+    text = _normalize(titre + " " + desc)
+
+    non_expert = sum(1 for kw in _NON_EXPERT_KW if kw in text)
+    expert     = sum(1 for kw in _EXPERT_KW     if kw in text)
+
+    desc_len = len(desc.strip())
+    if desc_len < 30:
+        non_expert += 1
+    if desc_len < 10:
+        non_expert += 1
+    if desc_len > 300:
+        expert += 1
+
+    net = non_expert - expert
+
+    if net >= 2:
+        return {"label": "Non-expert", "icon": "🟢", "cls": "profile-green"}
+    elif net >= 0:
+        return {"label": "Incertain",  "icon": "🟡", "cls": "profile-yellow"}
+    else:
+        return {"label": "Expert",     "icon": "🔴", "cls": "profile-red"}
+
+
 def _hunt_score(item, keywords_n):
     """Calcule un score d'opportunité pour le mode Chasse."""
     import time as _time
@@ -368,6 +418,14 @@ def _hunt_score(item, keywords_n):
     # Annonce récente (< 24h)
     if ts and (_time.time() - ts) < 86400:
         score += 3
+
+    # Profil vendeur : bonus si non-expert détecté
+    profile = _seller_profile(item.get("titre", ""), item.get("description", ""))
+    item["seller_profile"] = profile
+    if profile["label"] == "Non-expert":
+        score += 4
+    elif profile["label"] == "Incertain":
+        score += 1
 
     item["score"]            = score
     item["matched_keywords"] = matched
