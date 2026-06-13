@@ -32,7 +32,7 @@ _USER_AGENTS = [
 # ─────────────────────────────────────────────
 #  FETCH VINTED
 # ─────────────────────────────────────────────
-def fetch_vinted(query: str, pages: int = 3) -> list[dict]:
+def fetch_vinted(query: str, pages: int = 3, catalog_id: int = None) -> list[dict]:
     """Récupère les annonces Vinted pour une recherche donnée."""
     items = []
 
@@ -71,6 +71,8 @@ def fetch_vinted(query: str, pages: int = 3) -> list[dict]:
             "per_page": 96,
             "order": "newest_first",
         }
+        if catalog_id:
+            params["catalog_ids[]"] = catalog_id
         try:
             if _IMPERSONATE:
                 resp = session.get(VINTED_SEARCH_URL, params=params, timeout=15)

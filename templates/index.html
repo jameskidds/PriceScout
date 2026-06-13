@@ -372,6 +372,24 @@ tr.is-opp { background: rgba(61,220,132,.03); }
       <button id="searchBtn" onclick="doSearch()">Rechercher</button>
     </div>
     <p class="mode-hint" id="modeHint">Precise : tous les mots doivent etre dans le titre</p>
+    <div style="display:flex;align-items:center;gap:.6rem;margin-top:.5rem;flex-wrap:wrap">
+      <span style="font-size:.8rem;color:var(--muted);font-weight:600">Catégorie Vinted :</span>
+      <select id="catalogId" style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:.35rem .7rem;color:var(--text);font-size:.82rem;cursor:pointer">
+        <option value="">🌐 Toutes catégories</option>
+        <option value="1904">👗 Femmes — Vêtements</option>
+        <option value="16">👠 Femmes — Chaussures</option>
+        <option value="4">👔 Hommes — Vêtements</option>
+        <option value="98">👟 Hommes — Chaussures</option>
+        <option value="306">🧒 Enfants — Vêtements</option>
+        <option value="267">🧸 Enfants — Jouets</option>
+        <option value="2050">📱 Électronique</option>
+        <option value="2097">🎮 Jeux vidéo &amp; Consoles</option>
+        <option value="133">📚 Livres</option>
+        <option value="1560">🏠 Maison &amp; Jardin</option>
+        <option value="214">⚽ Sport &amp; Loisirs</option>
+        <option value="2196">🃏 Cartes à collectionner</option>
+      </select>
+    </div>
   </div>
 </div>
 
@@ -379,8 +397,26 @@ tr.is-opp { background: rgba(61,220,132,.03); }
 <div id="sectionChasse" style="display:none">
   <div class="hunt-section">
     <div class="hunt-row">
-      <input type="text" id="huntQuery" placeholder="Ce que tu cherches (ex: carte pokemon, pokemon, pikachu...)" autocomplete="off">
+      <input type="text" id="huntQuery" placeholder="Ce que tu cherches (ex: carte pokemon, nintendo ds, air max...)" autocomplete="off">
       <button class="hunt-btn" id="huntBtn" onclick="doHunt()">Chasser 🔥</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem;flex-wrap:wrap">
+      <span style="font-size:.8rem;color:var(--muted);font-weight:600">Catégorie Vinted :</span>
+      <select id="huntCatalogId" style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:.35rem .7rem;color:var(--text);font-size:.82rem;cursor:pointer">
+        <option value="">🌐 Toutes catégories</option>
+        <option value="1904">👗 Femmes — Vêtements</option>
+        <option value="16">👠 Femmes — Chaussures</option>
+        <option value="4">👔 Hommes — Vêtements</option>
+        <option value="98">👟 Hommes — Chaussures</option>
+        <option value="306">🧒 Enfants — Vêtements</option>
+        <option value="267">🧸 Enfants — Jouets</option>
+        <option value="2050">📱 Électronique</option>
+        <option value="2097">🎮 Jeux vidéo &amp; Consoles</option>
+        <option value="133">📚 Livres</option>
+        <option value="1560">🏠 Maison &amp; Jardin</option>
+        <option value="214">⚽ Sport &amp; Loisirs</option>
+        <option value="2196">🃏 Cartes à collectionner</option>
+      </select>
     </div>
     <p class="kw-hint">Mots-clés vendeur non-expert — clique pour activer, tape les tiens :</p>
     <div class="kw-chips" id="kwChips">
@@ -791,8 +827,9 @@ async function doHunt() {
       body: JSON.stringify({
         query,
         keywords,
-        pages:     parseInt(document.getElementById("nbPages")?.value || 5),
-        lbc_pages: parseInt(document.getElementById("lbcPages")?.value || 3),
+        pages:      parseInt(document.getElementById("nbPages")?.value || 5),
+        lbc_pages:  parseInt(document.getElementById("lbcPages")?.value || 3),
+        catalog_id: document.getElementById("huntCatalogId").value || "",
       }),
     });
     const data = await resp.json();
@@ -936,6 +973,7 @@ async function doSearch() {
     lbc_pages:   parseInt(document.getElementById("lbcPages").value),
     prix_min:    parseFloat(document.getElementById("prixMin").value) || 0,
     prix_max:    parseFloat(document.getElementById("prixMax").value) || 0,
+    catalog_id:  document.getElementById("catalogId").value || "",
   };
 
   try {

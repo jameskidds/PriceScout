@@ -175,6 +175,10 @@ def search():
     nb_pages = max(1, min(nb_pages, 10))
     lbc_pages   = int(data.get("lbc_pages") or 3)
     lbc_pages   = max(1, min(lbc_pages, 5))
+    try:
+        catalog_id = int(data.get("catalog_id") or 0) or None
+    except (ValueError, TypeError):
+        catalog_id = None
 
     try:
         prix_min = float(data.get("prix_min") or 0)
@@ -199,7 +203,7 @@ def search():
 
     def get_vinted():
         try:
-            raw_items = fetch_vinted(query, pages=nb_pages)
+            raw_items = fetch_vinted(query, pages=nb_pages, catalog_id=catalog_id)
             items = []
             for raw in raw_items:
                 try:
@@ -543,12 +547,16 @@ def hunt():
     nb_pages  = max(1, min(int(data.get("pages") or 5), 10))
     lbc_pages = max(1, min(int(data.get("lbc_pages") or 3), 5))
     keywords_n = [_normalize(k) for k in keywords]
+    try:
+        catalog_id = int(data.get("catalog_id") or 0) or None
+    except (ValueError, TypeError):
+        catalog_id = None
 
     res    = {"vinted": [], "lbc": []}
 
     def get_vinted_hunt():
         try:
-            raw_items = fetch_vinted(query, pages=nb_pages)
+            raw_items = fetch_vinted(query, pages=nb_pages, catalog_id=catalog_id)
             items = []
             for raw in raw_items:
                 try:
