@@ -503,12 +503,35 @@ def hunt():
 
     _inject_marges(all_items)
 
-    # Trie par score décroissant, puis prix croissant
-    all_items.sort(key=lambda x: (-x.get("score", 0), x.get("prix", 0)))
+    # ── Flip score : potentiel de revente basé sur la médiane Vinted ──
+    vinted_prices = [i["prix"] for i in res["vinted"] if i.get("prix", 0) > 0]
+    vinted_median = round(statistics.median(vinted_prices), 2) if len(vinted_prices) >= 3 else None
+
+    for item in all_items:
+        if vinted_median and item["prix"] > 0:
+            mult = round(vinted_median / item["prix"], 1)
+            if mult >= 3:
+                cls, icon = "flip-fire",  "🔥"
+            elif mult >= 2:
+                cls, icon = "flip-good",  "✅"
+            elif mult >= 1.3:
+                cls, icon = "flip-ok",    "⚠️"
+            else:
+                cls, icon = "flip-bad",   "❌"
+            item["flip"] = {"mult": mult, "label": f"{icon} x{mult}", "cls": cls, "ref": vinted_median}
+        else:
+            item["flip"] = None
+
+    # Trie par flip multiplier décroissant, puis score décroissant
+    all_items.sort(key=lambda x: (
+        -(x["flip"]["mult"] if x.get("flip") else 0),
+        -x.get("score", 0)
+    ))
 
     return jsonify({
-        "items": all_items,
-        "nb":    len(all_items),
+        "items":          all_items,
+        "nb":             len(all_items),
+        "vinted_median":  vinted_median,
         "sources": {
             "vinted": len(res["vinted"]),
             "lbc":    len(res["lbc"]),
