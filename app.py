@@ -468,7 +468,7 @@ Règles :
         import urllib.request
         url = (
             "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"gemini-1.5-flash:generateContent?key={key}"
+            f"gemini-2.0-flash:generateContent?key={key}"
         )
         body = json.dumps({
             "contents": [{"parts": [{"text": prompt}]}],
@@ -485,7 +485,8 @@ Règles :
             return {}
         analyses = json.loads(m.group(0))
         return {a["i"]: a for a in analyses if isinstance(a, dict) and "i" in a}
-    except Exception:
+    except Exception as _e:
+        print(f"[Gemini] Erreur : {_e}")
         return {}
 
 
