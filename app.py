@@ -16,6 +16,7 @@ from paths import BASE_DIR, bundled_path
 ALERTS_FILE    = os.path.join(BASE_DIR, "alerts.json")
 HISTORY_FILE   = os.path.join(BASE_DIR, "history.json")
 WATCHLIST_FILE = os.path.join(BASE_DIR, "watchlist.json")
+GEMINI_KEY_FILE = os.path.join(BASE_DIR, "gemini_key.txt")
 _alerts_lock   = threading.Lock()
 _history_lock  = threading.Lock()
 _wl_lock       = threading.Lock()
@@ -385,6 +386,70 @@ def _seller_profile(titre: str, desc: str) -> dict:
         return {"label": "Expert",     "icon": "🔴", "cls": "profile-red"}
 
 
+def _load_gemini_key() -> str:
+    try:
+        if os.path.exists(GEMINI_KEY_FILE):
+            return open(GEMINI_KEY_FILE, encoding="utf-8").read().strip()
+    except Exception:
+        pass
+    return ""
+
+
+def _gemini_analyze(items: list, query: str) -> dict:
+    """1 appel Gemini pour analyser les top 15 annonces. Retourne dict index → analyse."""
+    key = _load_gemini_key()
+    if not key or not items:
+        return {}
+
+    top = items[:15]
+    items_txt = "\n".join([
+        f"{i}. [{item['source']}] {item['titre']} — {item['prix']}€\n"
+        f"   Description: {(item.get('description') or '')[:200]}"
+        for i, item in enumerate(top)
+    ])
+
+    prompt = f"""Tu es un expert en achat-revente de seconde main (Vinted, LeBonCoin).
+Recherche de l'utilisateur : "{query}"
+
+Voici les annonces trouvées. Pour chacune, identifie l'objet et donne un verdict de revente.
+
+{items_txt}
+
+Réponds UNIQUEMENT avec un JSON valide, sans texte avant ni après :
+[{{"i":0,"objet":"nom court","verdict":"achète","mult":3.0,"raison":"max 12 mots"}}]
+
+Règles :
+- verdict = "achète" | "peut-être" | "passe"
+- mult = multiplicateur de revente estimé (2.0 = vendre 2x le prix d'achat)
+- Si pas assez d'info : verdict "peut-être", mult null
+- objet : nom précis et court (ex: "Nintendo 2DS XL rouge", "Lot 150 cartes Pokémon")
+"""
+
+    try:
+        import urllib.request
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"gemini-1.5-flash:generateContent?key={key}"
+        )
+        body = json.dumps({
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0.1, "maxOutputTokens": 1200},
+        }).encode()
+        req = urllib.request.Request(
+            url, data=body, headers={"Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(req, timeout=20) as r:
+            resp = json.loads(r.read())
+        text = resp["candidates"][0]["content"]["parts"][0]["text"]
+        m = re.search(r"\[.*\]", text, re.DOTALL)
+        if not m:
+            return {}
+        analyses = json.loads(m.group(0))
+        return {a["i"]: a for a in analyses if isinstance(a, dict) and "i" in a}
+    except Exception:
+        return {}
+
+
 def _hunt_score(item, keywords_n):
     """Calcule un score d'opportunité pour le mode Chasse."""
     import time as _time
@@ -528,10 +593,25 @@ def hunt():
         -x.get("score", 0)
     ))
 
+    # ── Analyse LLM Gemini (1 seul appel pour les 15 premiers) ──
+    gemini = _gemini_analyze(all_items, query)
+    for idx, item in enumerate(all_items[:15]):
+        if idx in gemini:
+            g = gemini[idx]
+            verdict = g.get("verdict", "")
+            item["llm"] = {
+                "objet":   g.get("objet", ""),
+                "verdict": verdict,
+                "icon":    {"achète": "🔥", "peut-être": "⚠️", "passe": "❌"}.get(verdict, "💡"),
+                "mult":    g.get("mult"),
+                "raison":  g.get("raison", ""),
+            }
+
     return jsonify({
         "items":          all_items,
         "nb":             len(all_items),
         "vinted_median":  vinted_median,
+        "has_llm":        bool(gemini),
         "sources": {
             "vinted": len(res["vinted"]),
             "lbc":    len(res["lbc"]),
@@ -873,6 +953,27 @@ def save_settings():
     try:
         with open(path, "w", encoding="utf-8") as f:
             f.write(f"{token}\n{chat_id}\n")
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/settings/gemini", methods=["GET"])
+def get_gemini_settings():
+    key = _load_gemini_key()
+    masked = (key[:8] + "..." + key[-4:]) if len(key) > 12 else ("✅ Configurée" if key else "")
+    return jsonify({"configured": bool(key), "masked": masked})
+
+
+@app.route("/settings/gemini", methods=["POST"])
+def save_gemini_settings():
+    data = request.get_json()
+    key  = (data.get("key") or "").strip()
+    if not key:
+        return jsonify({"ok": False, "error": "Clé manquante"}), 400
+    try:
+        with open(GEMINI_KEY_FILE, "w", encoding="utf-8") as f:
+            f.write(key)
         return jsonify({"ok": True})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500

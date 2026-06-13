@@ -568,7 +568,7 @@ tr.is-opp { background: rgba(61,220,132,.03); }
       </div>
     </div>
 
-    <!-- Formulaire -->
+    <!-- Formulaire Telegram -->
     <div class="settings-card">
       <h3>🔔 Configuration Telegram</h3>
       <div class="settings-field">
@@ -584,6 +584,23 @@ tr.is-opp { background: rgba(61,220,132,.03); }
         <button class="settings-test-btn" onclick="testTelegram()">📨 Tester</button>
       </div>
       <div class="settings-status" id="settingsStatus"></div>
+    </div>
+
+    <!-- Gemini IA -->
+    <div class="settings-card">
+      <h3>🤖 Analyse IA — Gemini (optionnel)</h3>
+      <div class="settings-info" style="margin-bottom:.8rem">
+        <p style="font-size:.85rem;color:var(--muted2);margin:0">Active l'analyse intelligente des annonces : l'IA identifie l'objet et te dit si c'est une bonne affaire pour la revente.</p>
+        <p style="font-size:.8rem;color:var(--muted);margin:.5rem 0 0">Clé gratuite sur <b>aistudio.google.com</b> → "Get API Key"</p>
+      </div>
+      <div class="settings-field">
+        <label>Clé API Gemini</label>
+        <input type="password" id="geminiKey" placeholder="AIzaSy...">
+      </div>
+      <div id="geminiStatus" style="font-size:.8rem;margin-top:.4rem;color:var(--muted)"></div>
+      <div class="settings-actions">
+        <button class="settings-save-btn" onclick="saveGeminiKey()">💾 Sauvegarder</button>
+      </div>
     </div>
 
   </div>
@@ -852,6 +869,14 @@ function renderHuntResults(data, keywords) {
       ? `<div><span class="flip-badge ${flip.cls}">${flip.label}</span><div class="flip-ref">ref. Vinted ${flip.ref} €</div></div>`
       : `<span style="color:var(--muted);font-size:.8rem">—</span>`;
 
+    const llm = item.llm;
+    const llmHtml = llm ? `
+      <div style="margin-top:.4rem;padding:.4rem .6rem;background:rgba(108,71,255,.08);border-radius:8px;border-left:3px solid var(--accent2)">
+        <div style="font-size:.78rem;font-weight:700;color:var(--accent2)">${llm.icon} IA — ${esc(llm.objet)}</div>
+        <div style="font-size:.75rem;color:var(--muted2);margin-top:.15rem">${esc(llm.raison)}</div>
+        ${llm.mult ? `<div style="font-size:.75rem;color:var(--text);font-weight:700;margin-top:.1rem">Revente estimée : x${llm.mult}</div>` : ""}
+      </div>` : "";
+
     return `<tr>
       <td class="rank">${idx===0?"🥇":idx===1?"🥈":idx===2?"🥉":`#${idx+1}`}</td>
       <td>${photoHtml}</td>
@@ -859,6 +884,7 @@ function renderHuntResults(data, keywords) {
       <td>
         <a href="${esc(item.url)}" class="title-link" target="_blank" rel="noopener">${esc(item.titre)}</a>
         ${descHtml}
+        ${llmHtml}
         <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin-top:.25rem">
           ${profileBadge}
           ${dateStr ? `<span style="font-size:.7rem;color:var(--muted)">${dateStr}</span>` : ""}
@@ -1658,6 +1684,39 @@ async function loadSettings() {
     if (data.token)   document.getElementById("tgToken").value  = data.token;
     if (data.chat_id) document.getElementById("tgChatId").value = data.chat_id;
   } catch(e) {}
+  try {
+    const resp2 = await fetch("/settings/gemini");
+    const g = await resp2.json();
+    if (g.configured) {
+      document.getElementById("geminiStatus").textContent = "✅ Clé configurée : " + g.masked;
+      document.getElementById("geminiStatus").style.color = "#00c864";
+    }
+  } catch(e) {}
+}
+
+async function saveGeminiKey() {
+  const key    = document.getElementById("geminiKey").value.trim();
+  const status = document.getElementById("geminiStatus");
+  if (!key) { status.textContent = "Entre ta clé API."; status.style.color = "#ff5a5a"; return; }
+  try {
+    const resp = await fetch("/settings/gemini", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ key }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      status.textContent = "✅ Clé Gemini sauvegardée — l'IA s'active à la prochaine chasse.";
+      status.style.color = "#00c864";
+      document.getElementById("geminiKey").value = "";
+    } else {
+      status.textContent = "Erreur : " + (data.error || "inconnue");
+      status.style.color = "#ff5a5a";
+    }
+  } catch(e) {
+    status.textContent = "Erreur réseau.";
+    status.style.color = "#ff5a5a";
+  }
 }
 
 async function saveSettings() {
