@@ -21,6 +21,10 @@ if not exist "dist\PriceScout.exe" (
     exit /b 1
 )
 
+REM Supprimer les anciens zips PriceScout
+echo Nettoyage des anciens zips...
+del /q "PriceScout_v*.zip" 2>nul
+
 REM Créer le dossier de packaging
 if exist "%FOLDER%" rmdir /s /q "%FOLDER%"
 mkdir "%FOLDER%"
