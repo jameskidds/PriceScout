@@ -271,15 +271,50 @@ def search():
 
     prices = [i["prix"] for i in all_items]
 
+    # ── Flip score Comparateur ──
+    vinted_prices = [i["prix"] for i in all_items if i.get("source") == "Vinted" and i.get("prix", 0) > 0]
+    vinted_median = round(statistics.median(vinted_prices), 2) if len(vinted_prices) >= 3 else None
+
+    for item in all_items:
+        if vinted_median and item["prix"] > 0:
+            mult = round(vinted_median / item["prix"], 1)
+            if mult >= 3:
+                cls, icon = "flip-fire", "🔥"
+            elif mult >= 2:
+                cls, icon = "flip-good", "✅"
+            elif mult >= 1.3:
+                cls, icon = "flip-ok",   "⚠️"
+            else:
+                cls, icon = "flip-bad",  "❌"
+            item["flip"] = {"mult": mult, "label": f"{icon} x{mult}", "cls": cls, "ref": vinted_median}
+        else:
+            item["flip"] = None
+
+    # ── Analyse LLM Gemini ──
+    gemini = _gemini_analyze(all_items, query)
+    for idx, item in enumerate(all_items[:15]):
+        if idx in gemini:
+            g = gemini[idx]
+            verdict = g.get("verdict", "")
+            item["llm"] = {
+                "objet":   g.get("objet", ""),
+                "verdict": verdict,
+                "icon":    {"achète": "🔥", "peut-être": "⚠️", "passe": "❌"}.get(verdict, "💡"),
+                "mult":    g.get("mult"),
+                "raison":  g.get("raison", ""),
+            }
+
     if all_items:
         _save_history_entry(query, all_items, mode, prices)
 
     return jsonify({
-        "items":      all_items,
-        "nb":         len(all_items),
-        "prix_min":   round(min(prices), 2) if prices else 0,
-        "prix_max":   round(max(prices), 2) if prices else 0,
-        "prix_moyen": round(statistics.mean(prices), 2) if prices else 0,
+        "items":         all_items,
+        "nb":            len(all_items),
+        "prix_min":      round(min(prices), 2) if prices else 0,
+        "prix_max":      round(max(prices), 2) if prices else 0,
+        "prix_moyen":    round(statistics.mean(prices), 2) if prices else 0,
+        "vinted_median": vinted_median,
+        "has_llm":       bool(gemini),
         "sources": {
             "vinted": len(res["vinted"]),
             "lbc":    len(res["lbc"]),
@@ -568,8 +603,8 @@ def hunt():
 
     _inject_marges(all_items)
 
-    # ── Flip score : potentiel de revente basé sur la médiane Vinted ──
-    vinted_prices = [i["prix"] for i in res["vinted"] if i.get("prix", 0) > 0]
+    # ── Flip score : médiane calculée sur les items Vinted FILTRÉS uniquement ──
+    vinted_prices = [i["prix"] for i in all_items if i.get("source") == "Vinted" and i.get("prix", 0) > 0]
     vinted_median = round(statistics.median(vinted_prices), 2) if len(vinted_prices) >= 3 else None
 
     for item in all_items:

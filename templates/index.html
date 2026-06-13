@@ -1078,7 +1078,7 @@ function renderResults(data) {
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>#</th><th></th><th>Source</th><th>Annonce</th><th>Prix</th><th>Marge est.</th><th></th></tr></thead>
+        <thead><tr><th>#</th><th></th><th>Source</th><th>Annonce</th><th>Prix</th><th>Flip</th><th></th></tr></thead>
         <tbody id="tableBody"></tbody>
       </table>
       <div id="loadMoreWrap"></div>
@@ -1191,13 +1191,29 @@ function renderTable() {
     const wlBtn = `<button class="wl-add-btn${inWl?" added":""}" onclick="addToWatchlist(${idx})" ${inWl?"disabled":""}>
                     ${inWl?"⭐":"☆"}
                   </button>`;
+    const flip = item.flip;
+    const flipHtml = flip
+      ? `<div><span class="flip-badge ${flip.cls}">${flip.label}</span><div class="flip-ref">ref. ${flip.ref} €</div></div>`
+      : `<span style="color:var(--muted);font-size:.8rem">—</span>`;
+
+    const llm = item.llm;
+    const llmHtml = llm ? `
+      <div style="margin-top:.3rem;padding:.35rem .55rem;background:rgba(108,71,255,.08);border-radius:8px;border-left:3px solid var(--accent2)">
+        <div style="font-size:.75rem;font-weight:700;color:var(--accent2)">${llm.icon} ${esc(llm.objet)}</div>
+        <div style="font-size:.72rem;color:var(--muted2)">${esc(llm.raison)}${llm.mult ? ` — <b>x${llm.mult}</b>` : ""}</div>
+      </div>` : "";
+
     return `<tr${rowClass}>
       <td class="rank">${medal}</td>
       <td>${photoHtml}</td>
       <td><span class="badge badge-${item.source}">${esc(item.source)}</span></td>
-      <td><a href="${esc(item.url)}" class="title-link" target="_blank" rel="noopener">${esc(item.titre)}</a>${oppTag}${item.etat ? `<span style="font-size:.68rem;color:var(--muted);margin-left:.4rem">${esc(item.etat)}</span>` : ""}</td>
+      <td>
+        <a href="${esc(item.url)}" class="title-link" target="_blank" rel="noopener">${esc(item.titre)}</a>
+        ${oppTag}${item.etat ? `<span style="font-size:.68rem;color:var(--muted);margin-left:.4rem">${esc(item.etat)}</span>` : ""}
+        ${llmHtml}
+      </td>
       <td class="${priceClass}">${item.prix} €</td>
-      <td>${margeBadge(item.marge)}</td>
+      <td>${flipHtml}</td>
       <td>${wlBtn}</td>
     </tr>`;
   });
