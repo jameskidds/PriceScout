@@ -374,8 +374,11 @@ tr.is-opp { background: rgba(61,220,132,.03); }
     <p class="mode-hint" id="modeHint">Precise : tous les mots doivent etre dans le titre</p>
     <div style="display:flex;align-items:center;gap:.6rem;margin-top:.5rem;flex-wrap:wrap">
       <span style="font-size:.8rem;color:var(--muted);font-weight:600">Catégorie Vinted :</span>
-      <select id="catalogId" onchange="onCatalogChange('catalogId','catalogCustom')" style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:.35rem .7rem;color:var(--text);font-size:.82rem;cursor:pointer">
+      <select id="catalogId" onchange="onCatalogChange('catalogId','catalogCustom');saveCatalogPref('catalogId','catalogCustom')" style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:.35rem .7rem;color:var(--text);font-size:.82rem;cursor:pointer">
         <option value="">🌐 Toutes catégories</option>
+        <option value="3025">🎮 Consoles de jeux</option>
+        <option value="2097">🕹️ Jeux vidéo</option>
+        <option value="4875">🃏 Cartes à collectionner</option>
         <option value="1904">👗 Femmes — Vêtements</option>
         <option value="16">👠 Femmes — Chaussures</option>
         <option value="4">👔 Hommes — Vêtements</option>
@@ -403,8 +406,11 @@ tr.is-opp { background: rgba(61,220,132,.03); }
     </div>
     <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem;flex-wrap:wrap">
       <span style="font-size:.8rem;color:var(--muted);font-weight:600">Catégorie Vinted :</span>
-      <select id="huntCatalogId" onchange="onCatalogChange('huntCatalogId','huntCatalogCustom')" style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:.35rem .7rem;color:var(--text);font-size:.82rem;cursor:pointer">
+      <select id="huntCatalogId" onchange="onCatalogChange('huntCatalogId','huntCatalogCustom');saveCatalogPref('huntCatalogId','huntCatalogCustom')" style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:.35rem .7rem;color:var(--text);font-size:.82rem;cursor:pointer">
         <option value="">🌐 Toutes catégories</option>
+        <option value="3025">🎮 Consoles de jeux</option>
+        <option value="2097">🕹️ Jeux vidéo</option>
+        <option value="4875">🃏 Cartes à collectionner</option>
         <option value="1904">👗 Femmes — Vêtements</option>
         <option value="16">👠 Femmes — Chaussures</option>
         <option value="4">👔 Hommes — Vêtements</option>
@@ -730,6 +736,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("huntQuery").addEventListener("keydown", e => {
     if (e.key === "Enter") doHunt();
   });
+  restoreCatalogPrefs();
 });
 
 // ── Navigation principale ──────────────────────────────
@@ -1761,6 +1768,29 @@ function getCatalogId(selectId, inputId) {
   const sel = document.getElementById(selectId);
   if (sel.value === "custom") return document.getElementById(inputId).value || "";
   return sel.value || "";
+}
+
+function saveCatalogPref(selectId, inputId) {
+  const val = getCatalogId(selectId, inputId);
+  const isCustom = document.getElementById(selectId).value === "custom";
+  localStorage.setItem("ps_" + selectId, document.getElementById(selectId).value);
+  if (isCustom) localStorage.setItem("ps_" + inputId, val);
+}
+
+function restoreCatalogPrefs() {
+  [["catalogId","catalogCustom"],["huntCatalogId","huntCatalogCustom"]].forEach(([sel, inp]) => {
+    const saved = localStorage.getItem("ps_" + sel);
+    if (!saved) return;
+    const el = document.getElementById(sel);
+    if (el) {
+      el.value = saved;
+      if (saved === "custom") {
+        const customVal = localStorage.getItem("ps_" + inp) || "";
+        const inpEl = document.getElementById(inp);
+        if (inpEl) { inpEl.value = customVal; inpEl.style.display = "inline-block"; }
+      }
+    }
+  });
 }
 
 async function saveGeminiKey() {
