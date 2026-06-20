@@ -24,7 +24,7 @@ _wl_lock       = threading.Lock()
 from flask import Flask, render_template, request, jsonify
 from vinted_pricer import fetch_vinted
 from leboncoin_scraper import fetch_leboncoin
-from activation import is_activated, increment_trial, trial_remaining, TRIAL_LIMIT
+from activation import is_activated, increment_trial, trial_remaining, TRIAL_LIMIT, activate
 
 
 _tpl = bundled_path("templates")
@@ -32,6 +32,21 @@ app = Flask(__name__, template_folder=_tpl)
 
 LOT_KEYWORDS = ["lot de", "lot d'", "lot ", "x cartes", " cartes pokemon",
                 "bundle", "collection de", "pack de"]
+
+# Mots exclus : accessoires, services, pièces détachées
+_EXCLUDE_KW = [
+    "coque", "housse", "etui", "etuis", "skin", "autocollant", "sticker",
+    "film protecteur", "protege ecran", "verre trempe", "chargeur", "cable",
+    "adaptateur", "stylet", "grip", "poignee", "support",
+    "service", "reparation", "deblocage", "desbloqueio", "modding",
+    "piece detachee", "ecran seul", "dalle", "batterie seule",
+    "sangle", "sacoche", "sac", "boite vide", "boitier vide",
+]
+
+def _is_accessory(title: str) -> bool:
+    """Retourne True si le titre ressemble à un accessoire ou service."""
+    t = _normalize(title)
+    return any(kw in t for kw in _EXCLUDE_KW)
 
 def _normalize(text):
     return "".join(c for c in unicodedata.normalize("NFD", text.lower())
@@ -157,18 +172,23 @@ def index():
 def search():
     data  = request.get_json()
     query = (data.get("query") or "").strip()
+    print(f"[SEARCH] requête reçue : {query}", flush=True)
     if not query:
         return jsonify({"erreur": "Veuillez saisir un article."}), 400
 
-    activated = is_activated()
-    if not activated:
-        remaining = trial_remaining()
-        if remaining <= 0:
-            return jsonify({"erreur": "Essai gratuit terminé. Relancez l'application pour activer votre licence."}), 403
-        increment_trial()
-        remaining -= 1
-    else:
+    # En mode Railway (cloud) : pas de trial, accès illimité
+    if os.environ.get("RAILWAY_ENVIRONMENT"):
         remaining = None
+    else:
+        activated = is_activated()
+        if not activated:
+            remaining = trial_remaining()
+            if remaining <= 0:
+                return jsonify({"erreur": "Essai gratuit terminé. Relancez l'application pour activer votre licence."}), 403
+            increment_trial()
+            remaining -= 1
+        else:
+            remaining = None
 
     mode     = (data.get("mode") or "strict")   # "strict" ou "large"
     nb_pages = int(data.get("pages") or 5)
@@ -218,6 +238,8 @@ def search():
                 title = raw.get("title", "")
                 if not keyword_ok(title):
                     continue
+                if _is_accessory(title):
+                    continue
                 if mode == "strict" and _is_lot(title):
                     continue
                 if not price_ok(price):
@@ -252,7 +274,7 @@ def search():
     def get_lbc():
         try:
             items = fetch_leboncoin(query, pages=lbc_pages)
-            items = [i for i in items if keyword_ok(i["titre"]) and price_ok(i["prix"])]
+            items = [i for i in items if keyword_ok(i["titre"]) and price_ok(i["prix"]) and not _is_accessory(i["titre"])]
             for item in items:
                 item["etat"] = _detect_etat_lbc(item.get("titre", ""))
             res["lbc"] = items
@@ -426,6 +448,10 @@ def _seller_profile(titre: str, desc: str) -> dict:
 
 
 def _load_gemini_key() -> str:
+    # Priorité : variable d'environnement (Railway) > fichier local
+    env_key = os.environ.get("LLM_KEY", "").strip()
+    if env_key:
+        return env_key
     try:
         if os.path.exists(GEMINI_KEY_FILE):
             return open(GEMINI_KEY_FILE, encoding="utf-8").read().strip()
@@ -437,7 +463,9 @@ def _load_gemini_key() -> str:
 def _gemini_analyze(items: list, query: str) -> dict:
     """1 appel Gemini pour analyser les top 15 annonces. Retourne dict index → analyse."""
     key = _load_gemini_key()
+    print(f"[Gemini] clé chargée : {'oui ('+key[:8]+'...)' if key else 'NON'}", flush=True)
     if not key or not items:
+        print(f"[Gemini] abandon — clé={bool(key)} items={len(items)}")
         return {}
 
     top = items[:15]
@@ -457,36 +485,59 @@ Voici les annonces trouvées. Pour chacune, identifie l'objet et donne un verdic
 Réponds UNIQUEMENT avec un JSON valide, sans texte avant ni après :
 [{{"i":0,"objet":"nom court","verdict":"achète","mult":3.0,"raison":"max 12 mots"}}]
 
-Règles :
+Règles (RÉPONDS EN FRANÇAIS UNIQUEMENT) :
 - verdict = "achète" | "peut-être" | "passe"
 - mult = multiplicateur de revente estimé (2.0 = vendre 2x le prix d'achat)
 - Si pas assez d'info : verdict "peut-être", mult null
-- objet : nom précis et court (ex: "Nintendo 2DS XL rouge", "Lot 150 cartes Pokémon")
+- objet : nom précis et court en français (ex: "Nintendo 2DS XL rouge", "Lot 150 cartes Pokémon")
+- raison : max 12 mots, en français, explique pourquoi acheter ou non
 """
 
     try:
         import urllib.request
-        url = (
-            "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"gemini-2.0-flash:generateContent?key={key}"
-        )
-        body = json.dumps({
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.1, "maxOutputTokens": 1200},
-        }).encode()
-        req = urllib.request.Request(
-            url, data=body, headers={"Content-Type": "application/json"}
-        )
-        with urllib.request.urlopen(req, timeout=20) as r:
-            resp = json.loads(r.read())
-        text = resp["candidates"][0]["content"]["parts"][0]["text"]
+        print(f"[IA] appel API en cours...", flush=True)
+        if key.startswith("gsk_"):
+            # Groq API (llama)
+            body = json.dumps({
+                "model": "llama-3.1-8b-instant",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.1,
+                "max_tokens": 1200,
+            }).encode()
+            req = urllib.request.Request(
+                "https://api.groq.com/openai/v1/chat/completions",
+                data=body,
+                headers={"Content-Type": "application/json",
+                         "Authorization": f"Bearer {key}",
+                         "User-Agent": "Mozilla/5.0"}
+            )
+            with urllib.request.urlopen(req, timeout=25) as r:
+                resp = json.loads(r.read())
+            text = resp["choices"][0]["message"]["content"]
+        else:
+            # Gemini API
+            body = json.dumps({
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": 0.1, "maxOutputTokens": 1200},
+            }).encode()
+            req = urllib.request.Request(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+                data=body,
+                headers={"Content-Type": "application/json", "x-goog-api-key": key}
+            )
+            with urllib.request.urlopen(req, timeout=25) as r:
+                resp = json.loads(r.read())
+            text = resp["candidates"][0]["content"]["parts"][0]["text"]
+        print(f"[IA] réponse : {text[:200]}", flush=True)
         m = re.search(r"\[.*\]", text, re.DOTALL)
         if not m:
+            print("[IA] JSON introuvable dans la réponse", flush=True)
             return {}
         analyses = json.loads(m.group(0))
+        print(f"[IA] {len(analyses)} analyses reçues", flush=True)
         return {a["i"]: a for a in analyses if isinstance(a, dict) and "i" in a}
     except Exception as _e:
-        print(f"[Gemini] Erreur : {_e}")
+        print(f"[IA] Erreur : {_e}", flush=True)
         return {}
 
 
@@ -570,6 +621,8 @@ def hunt():
                 except Exception:
                     continue
                 title = raw.get("title", "")
+                if _is_accessory(title):
+                    continue
                 desc  = (raw.get("description") or "").strip()
                 item_id = raw.get("id", "")
                 url     = raw.get("url") or f"https://www.vinted.fr/items/{item_id}"
@@ -589,7 +642,8 @@ def hunt():
 
     def get_lbc_hunt():
         try:
-            res["lbc"] = fetch_leboncoin(query, pages=lbc_pages)
+            lbc_raw = fetch_leboncoin(query, pages=lbc_pages)
+            res["lbc"] = [i for i in lbc_raw if not _is_accessory(i["titre"])]
         except Exception:
             pass
 
@@ -1002,6 +1056,17 @@ def save_settings():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
+@app.route("/activate", methods=["POST"])
+def activate_license():
+    data = request.get_json()
+    key  = (data.get("key") or "").strip()
+    if not key:
+        return jsonify({"ok": False, "erreur": "Clé manquante"}), 400
+    if activate(key):
+        return jsonify({"ok": True})
+    return jsonify({"ok": False, "erreur": "Clé invalide ou non reconnue"}), 400
+
+
 @app.route("/settings/gemini", methods=["GET"])
 def get_gemini_settings():
     key = _load_gemini_key()
@@ -1049,4 +1114,5 @@ def test_settings():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", debug=False, port=port)
