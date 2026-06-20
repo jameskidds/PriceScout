@@ -176,8 +176,8 @@ def search():
     if not query:
         return jsonify({"erreur": "Veuillez saisir un article."}), 400
 
-    # En mode Railway (cloud) : pas de trial, accès illimité
-    if os.environ.get("RAILWAY_ENVIRONMENT"):
+    # En mode cloud (Railway ou Render) : pas de trial, accès illimité
+    if os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("RENDER"):
         remaining = None
     else:
         activated = is_activated()
